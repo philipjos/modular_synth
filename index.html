@@ -1,0 +1,49 @@
+<head>
+    <link rel="stylesheet" href="./style.css" />
+</head>
+<body
+    onKeyDown="onKeyDown(event)"
+>
+    <div class="main-container">
+        <div class="oscilloscope">
+        </div>
+        <div class="actions-section">
+            <button onClick="onAddOscillatorClicked()">
+                Add oscillator
+            </button>
+            <button onClick="onAddConnectionClicked()">
+                Add connection
+            </button>
+            <button onClick="onAddDistortionClicked()">
+                Add distortion
+            </button>
+        </div>
+        <div id="devices-section">
+            <div class="tab-selector">
+                <button onClick="onTabClicked(0)">
+                    Oscillators
+                </button>
+                <button onClick="onTabClicked(1)">
+                    Connections
+                </button>
+                <button onClick="onTabClicked(2)">
+                    Effects
+                </button>
+            </div>
+            <div class="tabs">
+                <div id="oscillators" class="tab">
+                </div>
+                <div id="connections" class="tab">
+                </div>
+                <div id="effects" class="tab">
+                </div>
+            </div>
+        </div>
+        <div class="play-sound-text">
+            <div class="center-text text">
+                Press any key to play sound.
+            </div>
+        </div>
+    </div>
+    <script src="./script.js"></script>
+</body>

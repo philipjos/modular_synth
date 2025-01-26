@@ -1,0 +1,206 @@
+:root {
+    --main-width: 400px;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.oscilloscope {
+    background-color: #333340;
+    width: var(--main-width);
+    height: 100px;
+    display: flex;
+    position: relative;
+    margin: 16px 0px 0px 0px;
+}
+
+#devices-section {
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden;
+    height: 400px;
+    background-color: aliceblue;
+    padding: 8px;
+}
+
+.tab-selector {
+    margin: 0px 0px 8px 0px;
+}
+
+.oscillator, .connection, .effect {
+    background-color: #CCDDDF;
+    padding: 8px;
+    position: relative;
+    top: 0px;
+    left: 0px;
+}
+
+.amount-section {
+    margin: 8px 0px 0px 0px;
+}
+
+.text {
+    font-family: 'Courier New', Courier, monospace;
+}
+
+input {
+    width: 100%;
+    margin: 0px 0px 8px 0px;
+    
+    /* Make non highlightable */
+    outline: none;
+}
+
+.actions-section {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 8px;
+    background-color: #CCDDDF;
+    margin: 0px 0px 0px 0px;
+    padding: 8px;
+    box-sizing: border-box;
+    overflow-x: scroll;
+}
+
+.actions-section button {
+    padding: 8px 16px;
+    border: none;
+    background-color: #FFA07A;
+    cursor: pointer;
+}
+
+.play-sound-text {
+    position: absolute;
+    bottom: 16px;
+    right: 0px;
+    width: 100%;
+}
+
+.center-text {
+    text-align: center;
+}
+
+.device-title {
+    font-weight: bold;
+}
+
+.oscillator .device-title {
+    margin: 0px 0px 8px 0px;    
+}
+
+.connection {
+    display: flex;
+    gap: 8px;
+    flex-direction: column;
+}
+
+.pair-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0px 0px 8px 0px;
+}
+
+.source-section, .destination-section {
+    display: flex;
+    gap: 8px;
+}
+
+.destination-section {
+    flex-direction: column;
+}
+
+.destination-oscillator-section, .destination-parameter-section {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+.source-section {
+    display: flex;
+    align-items: flex-start;
+    height: 100%;
+}
+
+.tabs {
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden;
+}
+
+#oscillators, #connections, #effects {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0px 0px 8px 0px;
+    overflow-y: scroll;
+}
+
+.delete-button {
+    width: 20px;
+    height: 20px;
+    border-radius: 50vw;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background-color: #FFA07A;
+    border: 2px solid #b9613e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0px 0px 3px 0px;
+    box-sizing: border-box;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    color: #a13636;
+    font-size: 11px;
+
+    cursor: pointer;
+}
+
+.main-output-section, .main-bus-section {
+    display: flex;
+    align-items: center;
+    margin: 8px 2px 0px 0px;
+}
+
+.main-output-section {
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.main-bus-section {
+    justify-content: flex-start;
+}
+
+.routing-section {
+    display: flex;
+    justify-content: space-between;
+}
+
+.main-output-button, .main-bus-button {
+    background-color: #FFA07A;
+    padding: 8px 8px 8px 8px;
+    border: none;
+    cursor: pointer;
+}
+
+.main-output-led, .effects-main-output-led, .main-bus-led {
+    width: 4px;
+    height: 4px;
+    border-radius: 50vw;
+    background-color: #1aff3d;
+    border: 1px solid #384037;
+    margin: 0px 0px 0px 4px;
+}
