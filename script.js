@@ -313,6 +313,7 @@ function play() {
 
 function addOscillator() {
 	const oscillatorNumber = oscillators.filter((oscillator) => oscillator.type == "oscillator").length + 1
+	const name = "Oscillator " + oscillatorNumber
 	const sliderDefaultViewValue = 500
 	const phaseSliderDefaultViewValue = 0
 	const partialsSliderDefaultViewValue = 1000
@@ -322,6 +323,7 @@ function addOscillator() {
 
 	const oscillatorModel = {
 		id: id,
+		name: name,
 		type: "oscillator",
 		frequency: getUnscaledSliderValue(sliderDefaultViewValue),
 		amplitude: getUnscaledSliderValue(sliderDefaultViewValue),
@@ -343,7 +345,7 @@ function addOscillator() {
 	oscillator.classList.add("oscillator");
 
 	const oscillatorTitle = document.createElement("div");
-	oscillatorTitle.innerHTML = "Oscillator " + oscillatorNumber;
+	oscillatorTitle.innerHTML = name;
 	oscillatorTitle.classList.add("device-title");
 	oscillatorTitle.classList.add("oscillator-title");
 	oscillatorTitle.classList.add("text");
@@ -486,19 +488,11 @@ function addOscillator() {
 		updateConnectionsFromRemovingDeviceWithId(id)
 		updateDropDowns()
 		updateOscilloscope()
-		updateOscillatorTitles()
 	})
 	oscillator.appendChild(deleteButton)
 
 	updateConnectionPartyCaches()
 	updateDropDowns()
-}
-
-function updateOscillatorTitles() {
-	const oscillatorTitles = document.getElementsByClassName("oscillator-title")
-	for (let i = 0; i < oscillatorTitles.length; i++) {
-		oscillatorTitles[i].innerHTML = "Oscillator " + (i + 1)
-	}
 }
 
 function findOscillatorIndexById(id) {
@@ -630,6 +624,7 @@ function addConnection() {
 
 function addNoise() {
 	const noiseOscillatorNumber = oscillators.filter((oscillator) => oscillator.type === "noise").length + 1
+	const name = "Noise oscillator " + noiseOscillatorNumber
 	/*
 	const oscillatorNumber = oscillators.length + 1
 	const sliderDefaultViewValue = 500
@@ -646,6 +641,7 @@ function addNoise() {
 
 	const noiseModel = {
 		id: id,
+		name: name,
 		type: "noise",
 		rate: getUnscaledSliderValue(rateSliderDefaultValue),
 		amplitude: getUnscaledSliderValue(sliderDefaultViewValue),
@@ -662,7 +658,7 @@ function addNoise() {
 	noiseOscillator.classList.add("oscillator");
 
 	const noiseOscillatorTitle = document.createElement("div");
-	noiseOscillatorTitle.innerHTML = "Noise oscillator " + noiseOscillatorNumber;
+	noiseOscillatorTitle.innerHTML = name;
 	noiseOscillatorTitle.classList.add("device-title");
 	noiseOscillatorTitle.classList.add("oscillator-title");
 	noiseOscillatorTitle.classList.add("text");
@@ -733,11 +729,10 @@ function addNoise() {
 		const index = findOscillatorIndexById(id)
 		oscillators.splice(index, 1)
 		updateConnectionPartyCaches()
-		oscillatorsView.removeChild(oscillator)
+		oscillatorsView.removeChild(noiseOscillator)
 		updateConnectionsFromRemovingDeviceWithId(id)
 		updateDropDowns()
 		updateOscilloscope()
-		updateOscillatorTitles()
 	})
 	noiseOscillator.appendChild(deleteButton)
 
@@ -1001,6 +996,9 @@ function updateParameterDropDown(i) {
 			"Partials",
 			"Sync"
 		]
+	} else if (destination.type == "noise") {
+		modulatableParameters = ["rate", "amplitude"]
+		titles = ["Rate", "Amplitude"]
 	} else if (destination.type == "distortion") {
 		modulatableParameters = ["inputValue", "amount"]
 		titles = ["Input", "Amount"]
@@ -1054,7 +1052,8 @@ function updateConnectionPartyCaches() {
 	const oscillatorIds = oscillators.map((oscillator) => oscillator.id)
 	const effectIds = effects.map((effect) => effect.id)
 	connectionePartyDeviceIdsCache = oscillatorIds.concat(effectIds)
-	connectionPartyNamesCache = oscillators.map((_, index) => "Oscillator " + (index + 1)).concat(effects.map((_, index) => "Effect " + (index + 1)))
+	connectionPartyNamesCache = oscillators.map((oscillator) => oscillator.name)
+		.concat(effects.map((_, index) => "Effect " + (index + 1)))
 }
 
 function getConnectionPartyDeviceWithId(id) {
