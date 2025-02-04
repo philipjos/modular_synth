@@ -123,8 +123,9 @@ function calculateBuffer(length, scale) {
 				const amplitude = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].amplitude));
 				const frequency = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].frequency));
 				const frequencyScaled = getScaledFrequency(frequency)
+				const phase = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].phase))
 
-				const signal = Math.sin(x * Math.PI * 2) * amplitude
+				const signal = Math.sin((x + phase) * Math.PI * 2) * amplitude
 				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "previousValue", signal)
 
 				if (device.mainOutput) {
@@ -233,6 +234,7 @@ function play() {
 function addOscillator() {
 	const oscillatorNumber = oscillators.length + 1
 	const sliderDefaultViewValue = 500
+	const phaseSliderDefaultViewValue = 0
 	const id = generateNewDeviceId()
 
 	const oscillatorModel = {
@@ -240,6 +242,7 @@ function addOscillator() {
 		type: "oscillator",
 		frequency: getUnscaledSliderValue(sliderDefaultViewValue),
 		amplitude: getUnscaledSliderValue(sliderDefaultViewValue),
+		phase: getUnscaledSliderValue(phaseSliderDefaultViewValue),
 		mainOutput: true,
 		timedSignalX: 0,
 		previousValue: 0
@@ -281,6 +284,17 @@ function addOscillator() {
 	oscillator.appendChild(amplitudeText);
 	oscillator.appendChild(amplitudeInput);
 
+	const phaseText = document.createElement("div");
+	phaseText.innerHTML = "Phase";
+	phaseText.classList.add("text");
+	const phaseInput = document.createElement("input");
+	phaseInput.type = "range";
+	phaseInput.min = 0;
+	phaseInput.max = 1000;
+	phaseInput.value = phaseSliderDefaultViewValue;
+	oscillator.appendChild(phaseText);
+	oscillator.appendChild(phaseInput);
+
 	oscillatorsView.appendChild(oscillator);
 
 	frequencyInput.addEventListener("input", (event) => {
@@ -292,6 +306,12 @@ function addOscillator() {
 	amplitudeInput.addEventListener("input", (event) => {
 		const index = findOscillatorIndexById(id)
 		oscillators[index].amplitude = getUnscaledSliderValue(event.target.value)
+		updateOscilloscope()
+	})
+	
+	phaseInput.addEventListener("input", (event) => {
+		const index = findOscillatorIndexById(id)
+		oscillators[index].phase = getUnscaledSliderValue(event.target.value)
 		updateOscilloscope()
 	})
 
@@ -709,8 +729,17 @@ function updateParameterDropDown(i) {
 	var modulatableParameters = []
 	var titles = []
 	if (destination.type == "oscillator") {
-		modulatableParameters = ["frequency", "amplitude"]
-		titles = ["Frequency", "Amplitude"]
+		modulatableParameters = [
+			"frequency",
+			"amplitude",
+			"phase"
+		]
+
+		titles = [
+			"Frequency", 
+			"Amplitude",
+			"Phase"
+		]
 	} else if (destination.type == "distortion") {
 		modulatableParameters = ["inputValue", "amount"]
 		titles = ["Input", "Amount"]
