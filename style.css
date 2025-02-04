@@ -13,6 +13,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    overflow-x: hidden;
+    width: var(--main-width);
 }
 
 .oscilloscope {
@@ -64,12 +66,13 @@ input {
 .actions-section {
     display: flex;
     align-items: flex-start;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 8px;
     background-color: #CCDDDF;
     margin: 0px 0px 0px 0px;
     padding: 8px;
     box-sizing: border-box;
+    width: var(--main-width);
     overflow-x: scroll;
 }
 
@@ -78,6 +81,7 @@ input {
     border: none;
     background-color: #FFA07A;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .play-sound-text {

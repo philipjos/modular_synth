@@ -192,6 +192,28 @@ function calculateBuffer(length, scale) {
 
 				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "timedSignalX", timedSignalXNewValue)
 				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "syncTimedSignalX", syncTimedSignalXNewValue)
+			} else if (device.type == "noise") {
+				var timedSignalX = modulatedDevices[deviceIndex].timedSignalX
+				const rate = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].rate))
+				const scaledRate = rate * 20000
+				const amplitude = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].amplitude))
+
+				var signal = modulatedDevices[deviceIndex].previousValue
+
+				
+				if (timedSignalX >= 1) {
+					timedSignalX = 0
+					signal = (Math.random() * 2 - 1) * amplitude
+				}
+				
+				var timedSignalXNewValue = timedSignalX + scaledRate / scale
+				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "timedSignalX", timedSignalXNewValue)
+				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "previousValue", signal)
+
+				if (device.mainOutput) {
+					output += signal
+				}
+
 			} else if (device.type == "distortion") {
 				const amount = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].amount))
 				const scaledAmount = amount * 20
@@ -290,7 +312,7 @@ function play() {
 }
 
 function addOscillator() {
-	const oscillatorNumber = oscillators.length + 1
+	const oscillatorNumber = oscillators.filter((oscillator) => oscillator.type == "oscillator").length + 1
 	const sliderDefaultViewValue = 500
 	const phaseSliderDefaultViewValue = 0
 	const partialsSliderDefaultViewValue = 1000
@@ -606,6 +628,123 @@ function addConnection() {
 	destinationSelector.value = 0
 }
 
+function addNoise() {
+	const noiseOscillatorNumber = oscillators.filter((oscillator) => oscillator.type === "noise").length + 1
+	/*
+	const oscillatorNumber = oscillators.length + 1
+	const sliderDefaultViewValue = 500
+	const phaseSliderDefaultViewValue = 0
+	const partialsSliderDefaultViewValue = 1000
+	const syncSliderDefaultValue = 0
+	const shapeSliderDefaultValue = 0
+	*/
+
+	const rateSliderDefaultValue = 1000
+	const sliderDefaultViewValue = 500 
+
+	const id = generateNewDeviceId()
+
+	const noiseModel = {
+		id: id,
+		type: "noise",
+		rate: getUnscaledSliderValue(rateSliderDefaultValue),
+		amplitude: getUnscaledSliderValue(sliderDefaultViewValue),
+		mainOutput: true,
+		timedSignalX: 0,
+		previousValue: 0
+	}
+
+	oscillators.push(noiseModel)
+
+	const oscillatorsView = document.getElementById("oscillators");
+	
+	const noiseOscillator = document.createElement("div");
+	noiseOscillator.classList.add("oscillator");
+
+	const noiseOscillatorTitle = document.createElement("div");
+	noiseOscillatorTitle.innerHTML = "Noise oscillator " + noiseOscillatorNumber;
+	noiseOscillatorTitle.classList.add("device-title");
+	noiseOscillatorTitle.classList.add("oscillator-title");
+	noiseOscillatorTitle.classList.add("text");
+	noiseOscillator.appendChild(noiseOscillatorTitle);
+
+	const rateText = document.createElement("div");
+	rateText.innerHTML = "Rate";
+	rateText.classList.add("text");
+	const rateInput = document.createElement("input");
+	rateInput.type = "range";
+	rateInput.min = 0;
+	rateInput.max = 1000;
+	rateInput.value = rateSliderDefaultValue;
+	noiseOscillator.appendChild(rateText);
+	noiseOscillator.appendChild(rateInput);
+
+	const amplitudeText = document.createElement("div");
+	amplitudeText.innerHTML = "Amplitude";
+	amplitudeText.classList.add("text");
+	const amplitudeInput = document.createElement("input");
+	amplitudeInput.type = "range";
+	amplitudeInput.min = 0;
+	amplitudeInput.max = 1000;
+	amplitudeInput.value = sliderDefaultViewValue;
+	noiseOscillator.appendChild(amplitudeText);
+	noiseOscillator.appendChild(amplitudeInput);
+
+	oscillatorsView.appendChild(noiseOscillator);
+
+	rateInput.addEventListener("input", (event) => {
+		const index = findOscillatorIndexById(id)
+		oscillators[index].rate = getUnscaledSliderValue(event.target.value)
+		updateOscilloscope()
+	})
+
+	amplitudeInput.addEventListener("input", (event) => {
+		const index = findOscillatorIndexById(id)
+		oscillators[index].amplitude = getUnscaledSliderValue(event.target.value)
+		updateOscilloscope()
+	})
+
+	const mainOutputSection = document.createElement("div");
+	mainOutputSection.classList.add("main-output-section");
+	noiseOscillator.appendChild(mainOutputSection)
+
+	const mainOutputButton = document.createElement("div");
+	mainOutputButton.innerHTML = "Main Output";
+	mainOutputButton.classList.add("main-output-button");
+	mainOutputButton.classList.add("text");
+	mainOutputButton.addEventListener("click", () => {
+		const index = findOscillatorIndexById(id)
+		oscillators[index].mainOutput = !oscillators[index].mainOutput;
+		const ledViews = document.getElementsByClassName("main-output-led")
+		const ledView = ledViews[index]
+		ledView.style.backgroundColor = oscillators[index].mainOutput ? "#1aff3d" : "#aaaaaa"
+		updateOscilloscope()
+	})
+	mainOutputSection.appendChild(mainOutputButton)
+
+	const mainOutputLED = document.createElement("div");
+	mainOutputLED.classList.add("main-output-led");
+	mainOutputSection.appendChild(mainOutputLED)
+
+	const deleteButton = document.createElement("div");
+	deleteButton.innerHTML = "x";
+	deleteButton.classList.add("delete-button");
+	deleteButton.addEventListener("click", () => {
+		const index = findOscillatorIndexById(id)
+		oscillators.splice(index, 1)
+		updateConnectionPartyCaches()
+		oscillatorsView.removeChild(oscillator)
+		updateConnectionsFromRemovingDeviceWithId(id)
+		updateDropDowns()
+		updateOscilloscope()
+		updateOscillatorTitles()
+	})
+	noiseOscillator.appendChild(deleteButton)
+
+	updateConnectionPartyCaches()
+	updateDropDowns()
+}
+
 function addDistortion() {
 	let id = generateNewDeviceId();
 	let sliderDefaultViewValue = 500
@@ -888,6 +1027,11 @@ function onAddOscillatorClicked() {
 
 function onAddConnectionClicked() {
 	addConnection()
+	updateOscilloscope()
+}
+
+function onAddNoiseClicked() {
+	addNoise();
 	updateOscilloscope()
 }
 
