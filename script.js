@@ -41,6 +41,12 @@ function getScaledPartials(value) {
 	return Math.floor(value * (top - bottom) + bottom)
 }
 
+function getScaledSync(value) {
+	const top = 16
+	const bottom = 1
+	return value * (top - bottom) + bottom
+}
+
 const onFrequencySliderChange = (event) => {
 	frequency = getUnscaledSliderValue(event.target.value)
 	updateOscilloscope()
@@ -56,6 +62,7 @@ function calculateBuffer(length, scale) {
 
 	for (let i = 0; i < oscillators.length; i++) {
 		oscillators[i].timedSignalX = 0
+		oscillators[i].syncTimedSignalX = 0
 	}
 
 	var connectionsIndexMapped = []
@@ -134,6 +141,7 @@ function calculateBuffer(length, scale) {
 			
 			if (device.type == "oscillator") {
 				const x = modulatedDevices[deviceIndex].timedSignalX
+				const syncX = modulatedDevices[deviceIndex].syncTimedSignalX
 				const amplitude = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].amplitude));
 				const frequency = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].frequency));
 				const frequencyScaled = getScaledFrequency(frequency)
@@ -142,8 +150,9 @@ function calculateBuffer(length, scale) {
 				const scaledShape = getScaledShape(shape)
 				const partials = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].partials))
 				const partialsScaled = getScaledPartials(partials)
+				const sync = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].sync))
+				const scaledSync = getScaledSync(sync)
 
-				//var signal = Math.sin((x + phase) * Math.PI * 2) * amplitude
 				var signal = 0
 
 				for (let partial = 1; partial <= partialsScaled; partial++) {
@@ -161,7 +170,7 @@ function calculateBuffer(length, scale) {
 						partialAmplitude = -8 * Math.pow(-1, partial) / (Math.pow(Math.PI, 2) * Math.pow(partialFrequency, 2))
 					}
 
-					signal += Math.sin((x + phase) * Math.PI * 2 * partialFrequency) * partialAmplitude * amplitude
+					signal += Math.sin((syncX + phase) * Math.PI * 2 * partialFrequency) * partialAmplitude * amplitude
 				}
 
 				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "previousValue", signal)
@@ -171,7 +180,18 @@ function calculateBuffer(length, scale) {
 					mainBusNewSignal += signal
 				}
 
-				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "timedSignalX", device.timedSignalX + frequencyScaled / scale)
+				var timedSignalXNewValue = device.timedSignalX + frequencyScaled / scale
+				const syncFrequency = frequencyScaled * scaledSync
+				var syncTimedSignalXNewValue = device.syncTimedSignalX + syncFrequency / scale
+
+				
+				if (timedSignalXNewValue >= 1) {
+					timedSignalXNewValue = 0
+					syncTimedSignalXNewValue = 0
+				}
+
+				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "timedSignalX", timedSignalXNewValue)
+				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "syncTimedSignalX", syncTimedSignalXNewValue)
 			} else if (device.type == "distortion") {
 				const amount = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].amount))
 				const scaledAmount = amount * 20
@@ -274,6 +294,8 @@ function addOscillator() {
 	const sliderDefaultViewValue = 500
 	const phaseSliderDefaultViewValue = 0
 	const partialsSliderDefaultViewValue = 1000
+	const syncSliderDefaultValue = 0
+	const shapeSliderDefaultValue = 0
 	const id = generateNewDeviceId()
 
 	const oscillatorModel = {
@@ -282,10 +304,12 @@ function addOscillator() {
 		frequency: getUnscaledSliderValue(sliderDefaultViewValue),
 		amplitude: getUnscaledSliderValue(sliderDefaultViewValue),
 		phase: getUnscaledSliderValue(phaseSliderDefaultViewValue),
-		shape: getUnscaledSliderValue(sliderDefaultViewValue),
+		shape: getUnscaledSliderValue(shapeSliderDefaultValue),
 		partials: getUnscaledSliderValue(partialsSliderDefaultViewValue),
+		sync: getUnscaledSliderValue(syncSliderDefaultValue),
 		mainOutput: true,
 		timedSignalX: 0,
+		syncTimedSignalX: 0,
 		previousValue: 0
 	}
 
@@ -343,7 +367,7 @@ function addOscillator() {
 	shapeInput.type = "range";
 	shapeInput.min = 0;
 	shapeInput.max = 1000;
-	shapeInput.value = sliderDefaultViewValue;
+	shapeInput.value = shapeSliderDefaultValue;
 	oscillator.appendChild(shapeText);
 	oscillator.appendChild(shapeInput);
 
@@ -357,6 +381,17 @@ function addOscillator() {
 	partialsInput.value = partialsSliderDefaultViewValue;
 	oscillator.appendChild(partialsText);
 	oscillator.appendChild(partialsInput);
+
+	const syncText = document.createElement("div");
+	syncText.innerHTML = "Sync";
+	syncText.classList.add("text");
+	const syncInput = document.createElement("input");
+	syncInput.type = "range";
+	syncInput.min = 0;
+	syncInput.max = 1000;
+	syncInput.value = syncSliderDefaultValue;
+	oscillator.appendChild(syncText);
+	oscillator.appendChild(syncInput);
 
 	oscillatorsView.appendChild(oscillator);
 
@@ -387,6 +422,12 @@ function addOscillator() {
 	partialsInput.addEventListener("input", (event) => {
 		const index = findOscillatorIndexById(id)
 		oscillators[index].partials = getUnscaledSliderValue(event.target.value)
+		updateOscilloscope()
+	})
+
+	syncInput.addEventListener("input", (event) => {
+		const index = findOscillatorIndexById(id)
+		oscillators[index].sync = getUnscaledSliderValue(event.target.value)
 		updateOscilloscope()
 	})
 
@@ -809,7 +850,8 @@ function updateParameterDropDown(i) {
 			"amplitude",
 			"phase",
 			"shape",
-			"partials"
+			"partials",
+			"sync"
 		]
 
 		titles = [
@@ -817,7 +859,8 @@ function updateParameterDropDown(i) {
 			"Amplitude",
 			"Phase",
 			"Shape",
-			"Partials"
+			"Partials",
+			"Sync"
 		]
 	} else if (destination.type == "distortion") {
 		modulatableParameters = ["inputValue", "amount"]
