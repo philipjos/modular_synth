@@ -17,13 +17,17 @@ body {
     width: var(--main-width);
 }
 
+.top-actions-section {
+    margin: 8px 0px 0px 0px;
+}
+
 .oscilloscope {
     background-color: #333340;
     width: var(--main-width);
     height: 100px;
     display: flex;
     position: relative;
-    margin: 16px 0px 0px 0px;
+    margin: 0px 0px 0px 0px;
 }
 
 #devices-section {

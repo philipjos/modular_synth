@@ -5,6 +5,14 @@
     onKeyDown="onKeyDown(event)"
 >
     <div class="main-container">
+        <div class="top-actions-section">
+            <button onClick="onSavePresetClicked()">
+                Save preset
+            </button>
+            <button onClick="onLoadPresetClicked()">
+                Load preset
+            </button>
+        </div>
         <div class="oscilloscope">
         </div>
         <div class="actions-section">
@@ -48,5 +56,6 @@
             </div>
         </div>
     </div>
+    <script src="./ScalableParameter.js"></script>
     <script src="./script.js"></script>
 </body>

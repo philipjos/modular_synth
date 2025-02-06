@@ -17,6 +17,23 @@ var connectionPartyNamesCache = []
 
 var lastDeviceId = 0
 
+var frequencyScalableParameterType = new ScalableParameter(0.5, 0, 500)
+var amplitudeScalableParameterType = new ScalableParameter(0.5, 0, 1)
+var phaseScalableParameterType = new ScalableParameter(0.5, 0, 1)
+var shapeScalableParameterType = new ScalableParameter(0.5, 0, 2)
+var partialsScalableParameterType = new ScalableParameter(0.5, 1, 31)
+var syncScalableParameterType = new ScalableParameter(0.5, 1, 16)
+
+// Noise oscillator
+var rateScalableParameterType = new ScalableParameter(0.5, 0, 1)
+
+// Connection
+var connectionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
+
+// Distortion
+var distortionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
+
+
 function getUnscaledSliderValue(value) {
 	return value / 1000
 }
@@ -1085,6 +1102,119 @@ function setPropertyOfConnectionPartyDeviceWithId(id, property, value) {
 		effect[property] = value
 		return
 	}
+}
+
+const updateControlViews = () => {
+	for (let i = 0; i < oscillators.length; i++) {
+		const oscillator = oscillators[i]
+		const oscillatorView = document.getElementsByClassName("oscillator")[i]
+
+		if (oscillator.type == "oscillator") {
+			const frequencyInput = oscillatorView.getElementsByTagName("input")[0]
+			const amplitudeInput = oscillatorView.getElementsByTagName("input")[1]
+			const phaseInput = oscillatorView.getElementsByTagName("input")[2]
+			const shapeInput = oscillatorView.getElementsByTagName("input")[3]
+			const partialsInput = oscillatorView.getElementsByTagName("input")[4]
+			const syncInput = oscillatorView.getElementsByTagName("input")[5]
+
+			frequencyInput.value = frequencyScalableParameterType.getSliderForUnscaledValue(oscillator.frequency)
+			amplitudeInput.value = amplitudeScalableParameterType.getSliderForUnscaledValue(oscillator.amplitude)
+			phaseInput.value = phaseScalableParameterType.getSliderForUnscaledValue(oscillator.phase)
+			shapeInput.value = shapeScalableParameterType.getSliderForUnscaledValue(oscillator.shape)
+			partialsInput.value = partialsScalableParameterType.getSliderForUnscaledValue(oscillator.partials)
+			syncInput.value = syncScalableParameterType.getSliderForUnscaledValue(oscillator.sync)
+		} else if (oscillator.type == "noise") {
+			const rateInput = oscillatorView.getElementsByTagName("input")[0]
+			const amplitudeInput = oscillatorView.getElementsByTagName("input")[1]
+
+			rateInput.value = rateScalableParameterType.getSliderForUnscaledValue(oscillator.rate)
+			amplitudeInput.value = amplitudeScalableParameterType.getSliderForUnscaledValue(oscillator.amplitude)
+		}
+	}
+	
+	for (let i = 0; i < connections.length; i++) {
+		const connection = connections[i]
+		const connectionView = document.getElementsByClassName("connection")[i]
+		const amountInput = connectionView.getElementsByTagName("input")[0]
+		
+		amountInput.value = connectionAmountScalableParameterType.getSliderForUnscaledValue(connection.amount)
+	}
+
+	for (let i = 0; i < effects.length; i++) {
+		const effect = effects[i]
+
+		if (effect.type == "distortion") {
+			const effectView = document.getElementsByClassName("effect")[i]
+			const amountInput = effectView.getElementsByTagName("input")[0]
+			
+			amountInput.value = distortionAmountScalableParameterType.getSliderForUnscaledValue(effect.amount)
+		}
+	}
+}
+
+async function saveFile(suggestedName, content) {
+    try {
+        const handle = await window.showSaveFilePicker({
+            suggestedName: suggestedName,
+            types: [
+                {
+                    description: 'JSON file',
+                    accept: { 'application/json': ['.json'] }
+                }
+            ]
+        });
+
+        const writable = await handle.createWritable();
+        await writable.write(content);
+        await writable.close();
+    } catch (err) {
+        console.error('File save canceled or failed', err);
+    }
+}
+
+const onSavePresetClicked = () => {
+	const presetObject = {
+		oscillators: oscillators,
+		connections: connections,
+		effects: effects
+	}
+
+	const presetString = JSON.stringify(presetObject)
+
+	saveFile('modular_synth_preset.json', presetString);
+}
+
+const onLoadPresetClicked = () => {
+	// Open file dialog
+	const fileInput = document.createElement("input")
+	fileInput.type = "file"
+	fileInput.accept = ".json"
+	fileInput.addEventListener("change", (event) => {
+		const file = event.target.files[0]
+		loadPreset(file)
+	})
+
+	// Trigger file dialog
+	fileInput.click()
+}
+
+const loadPreset = (presetFile) => {
+	const reader = new FileReader()
+	reader.onload = (event) => {
+		const presetObject = JSON.parse(event.target.result)
+		setSynthFromPresetObject(presetObject)
+	}
+	reader.readAsText(presetFile)
+}
+
+const setSynthFromPresetObject = (presetObject) => {
+	oscillators = presetObject.oscillators
+	connections = presetObject.connections
+	effects = presetObject.effects
+	updateConnectionPartyCaches()
+	updateDropDowns()
+	updateOscilloscope()
+	updateControlViews()
 }
 
 addOscillator()
