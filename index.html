@@ -16,6 +16,21 @@
                 Random preset
             </button>
         </div>
+        <div class="main-volume-section">
+            <div class="center-text text">
+                Main volume
+            </div>
+            <input
+                id="main-volume-slider"
+                type="range"
+                min="0"
+                max="1000"
+                step="1"
+                value="250"
+                class="main-volume-slider"
+                onInput="onMainVolumeChanged(event)"
+            />
+        </div>
         <div class="oscilloscope">
         </div>
         <div class="actions-section">

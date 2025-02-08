@@ -32,6 +32,9 @@ const shapeSliderDefaultValue = 0
 const rateSliderDefaultValue = 1000
 const sliderDefaultViewValue = 500 
 
+var mainVolume = 0.25;
+var mainVolumeScalableParameterType = new ScalableParameter(0.25, 0, 1)
+
 // Noise oscillator
 var rateScalableParameterType = new ScalableParameter(0.5, 0, 1)
 
@@ -375,7 +378,13 @@ function play() {
 			playingEnvelopeState = "steady"
 		}
 
-		data[i] = Math.max(-safetyHardClip, Math.min(safetyHardClip, calculatedBuffer[i] * volume * playingVolume * volumeSafeScale));
+		data[i] = Math.max(
+			-safetyHardClip, 
+			Math.min(
+				safetyHardClip, 
+				calculatedBuffer[i] * volume * playingVolume * volumeSafeScale * mainVolume
+			)
+		);
 	}
 
 	const source = audioCtx.createBufferSource();
@@ -1471,6 +1480,17 @@ const updateConnectionDropdownSelectionsFromModel = () => {
 	}
 }
 
+const updateMainVolumeSliderFromModel = () => {
+	const mainVolumeSlider = document.getElementById("main-volume-slider")
+	mainVolumeSlider.value = mainVolumeScalableParameterType.getSliderForUnscaledValue(mainVolume)
+}
+
+const onMainVolumeChanged = (event) => {
+	mainVolume = getUnscaledSliderValue(event.target.value)
+}
+
+
+updateMainVolumeSliderFromModel()
 addOscillator()
 addConnection()
 setTab(0)
