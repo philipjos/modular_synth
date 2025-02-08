@@ -24,6 +24,14 @@ var shapeScalableParameterType = new ScalableParameter(0.5, 0, 2)
 var partialsScalableParameterType = new ScalableParameter(0.5, 1, 31)
 var syncScalableParameterType = new ScalableParameter(0.5, 1, 16)
 
+const phaseSliderDefaultViewValue = 0
+const partialsSliderDefaultViewValue = 1000
+const syncSliderDefaultValue = 0
+const shapeSliderDefaultValue = 0
+
+const rateSliderDefaultValue = 1000
+const sliderDefaultViewValue = 500 
+
 // Noise oscillator
 var rateScalableParameterType = new ScalableParameter(0.5, 0, 1)
 
@@ -73,6 +81,56 @@ const onAmplitudeSliderChange = (event) => {
 	amplitude = getUnscaledSliderValue(event.target.value)
 	updateOscilloscope()
 }
+
+const modulatableParametersForType = (type) => {
+	if (type == "oscillator") {
+		return [
+			{
+				name: "frequency",
+				title: "Frequency",
+			},
+			{
+				name: "amplitude",
+				title: "Amplitude",
+			},
+			{
+				name: "phase",
+				title: "Phase",
+			},
+			{
+				name: "shape",
+				title: "Shape",
+			},
+			{
+				name: "partials",
+				title: "Partials",
+			},
+			{
+				name: "sync",
+				title: "Sync",
+			}
+		]
+	} else if (type == "noise") {
+		return [
+			{
+				name: "rate",
+				title: "Rate",
+			},
+			{
+				name: "amplitude",
+				title: "Amplitude",
+			}
+		]
+	} else if (type == "distortion") {
+		return [
+			{
+				name: "amount",
+				title: "Amount",
+			}
+		]
+	}
+}
+				
 
 function calculateBuffer(length, scale) {
 	let outputBuffer = []
@@ -328,34 +386,7 @@ function play() {
 	source.start(audioCtx.currentTime);
 }
 
-function addOscillator() {
-	const oscillatorNumber = oscillators.filter((oscillator) => oscillator.type == "oscillator").length + 1
-	const name = "Oscillator " + oscillatorNumber
-	const sliderDefaultViewValue = 500
-	const phaseSliderDefaultViewValue = 0
-	const partialsSliderDefaultViewValue = 1000
-	const syncSliderDefaultValue = 0
-	const shapeSliderDefaultValue = 0
-	const id = generateNewDeviceId()
-
-	const oscillatorModel = {
-		id: id,
-		name: name,
-		type: "oscillator",
-		frequency: getUnscaledSliderValue(sliderDefaultViewValue),
-		amplitude: getUnscaledSliderValue(sliderDefaultViewValue),
-		phase: getUnscaledSliderValue(phaseSliderDefaultViewValue),
-		shape: getUnscaledSliderValue(shapeSliderDefaultValue),
-		partials: getUnscaledSliderValue(partialsSliderDefaultViewValue),
-		sync: getUnscaledSliderValue(syncSliderDefaultValue),
-		mainOutput: true,
-		timedSignalX: 0,
-		syncTimedSignalX: 0,
-		previousValue: 0
-	}
-
-	oscillators.push(oscillatorModel)
-
+function addOscillatorViewWithId(id) {
 	const oscillatorsView = document.getElementById("oscillators");
 	
 	const oscillator = document.createElement("div");
@@ -512,23 +543,36 @@ function addOscillator() {
 	updateDropDowns()
 }
 
+function addOscillator() {
+	const oscillatorNumber = oscillators.filter((oscillator) => oscillator.type == "oscillator").length + 1
+	const name = "Oscillator " + oscillatorNumber
+	const id = generateNewDeviceId()
+
+	const oscillatorModel = {
+		id: id,
+		name: name,
+		type: "oscillator",
+		frequency: getUnscaledSliderValue(sliderDefaultViewValue),
+		amplitude: getUnscaledSliderValue(sliderDefaultViewValue),
+		phase: getUnscaledSliderValue(phaseSliderDefaultViewValue),
+		shape: getUnscaledSliderValue(shapeSliderDefaultValue),
+		partials: getUnscaledSliderValue(partialsSliderDefaultViewValue),
+		sync: getUnscaledSliderValue(syncSliderDefaultValue),
+		mainOutput: true,
+		timedSignalX: 0,
+		syncTimedSignalX: 0,
+		previousValue: 0
+	}
+
+	oscillators.push(oscillatorModel)
+	addOscillatorViewWithId(id)
+}
+
 function findOscillatorIndexById(id) {
 	return oscillators.findIndex((oscillator) => oscillator.id === id)
 }
 
-function addConnection() {
-	const id = generateNewDeviceId()
-	const sliderDefaultViewValue = 500
-	var connectionModel = {
-		id: id,
-		source: "-",
-		destination: "-",
-		amount: getUnscaledSliderValue(sliderDefaultViewValue),
-		destinationParameter: "-"
-	}
-
-	connections.push(connectionModel)
-
+function addConnectionViewWithId(id) {
 	const connctionsView = document.getElementById("connections");
 
 	const connection = document.createElement("div");
@@ -632,42 +676,29 @@ function addConnection() {
 
 	updateConnectionPartyCaches()
 
-	const index = connections.length - 1
+	const index = findConnectionIndexById(id)
 	updateDropDown(index)
 	
 	sourceSelector.value = 0
 	destinationSelector.value = 0
 }
 
-function addNoise() {
-	const noiseOscillatorNumber = oscillators.filter((oscillator) => oscillator.type === "noise").length + 1
-	const name = "Noise oscillator " + noiseOscillatorNumber
-	/*
-	const oscillatorNumber = oscillators.length + 1
-	const sliderDefaultViewValue = 500
-	const phaseSliderDefaultViewValue = 0
-	const partialsSliderDefaultViewValue = 1000
-	const syncSliderDefaultValue = 0
-	const shapeSliderDefaultValue = 0
-	*/
-
-	const rateSliderDefaultValue = 1000
-	const sliderDefaultViewValue = 500 
-
+function addConnection() {
 	const id = generateNewDeviceId()
-
-	const noiseModel = {
+	const sliderDefaultViewValue = 500
+	var connectionModel = {
 		id: id,
-		name: name,
-		type: "noise",
-		rate: getUnscaledSliderValue(rateSliderDefaultValue),
-		amplitude: getUnscaledSliderValue(sliderDefaultViewValue),
-		mainOutput: true,
-		timedSignalX: 0,
-		previousValue: 0
+		source: "-",
+		destination: "-",
+		amount: getUnscaledSliderValue(sliderDefaultViewValue),
+		destinationParameter: "-"
 	}
 
-	oscillators.push(noiseModel)
+	connections.push(connectionModel)
+	addConnectionViewWithId(id)
+}
+
+const addNoiseViewWithId = (id) => {
 
 	const oscillatorsView = document.getElementById("oscillators");
 	
@@ -757,20 +788,28 @@ function addNoise() {
 	updateDropDowns()
 }
 
-function addDistortion() {
-	let id = generateNewDeviceId();
-	let sliderDefaultViewValue = 500
-	let effectModel = {
+function addNoise() {
+	const noiseOscillatorNumber = oscillators.filter((oscillator) => oscillator.type === "noise").length + 1
+	const name = "Noise oscillator " + noiseOscillatorNumber
+
+	const id = generateNewDeviceId()
+
+	const noiseModel = {
 		id: id,
-		type: "distortion",
-		amount: getUnscaledSliderValue(sliderDefaultViewValue),
-		mainBus: false,
+		name: name,
+		type: "noise",
+		rate: getUnscaledSliderValue(rateSliderDefaultValue),
+		amplitude: getUnscaledSliderValue(sliderDefaultViewValue),
 		mainOutput: true,
-		inputValue: 0,
+		timedSignalX: 0,
 		previousValue: 0
 	}
-	effects.push(effectModel)
 
+	oscillators.push(noiseModel)
+	addNoiseViewWithId(id)
+}
+
+function addDistortionViewWithId(id) {
 	const effectsView = document.getElementById("effects");
 	const effectView = document.createElement("div");
 	effectView.classList.add("effect");
@@ -872,6 +911,23 @@ function addDistortion() {
 
 	updateConnectionPartyCaches()
 	updateDropDowns()
+}
+
+function addDistortion() {
+	let id = generateNewDeviceId();
+	let sliderDefaultViewValue = 500
+	let effectModel = {
+		id: id,
+		type: "distortion",
+		amount: getUnscaledSliderValue(sliderDefaultViewValue),
+		mainBus: false,
+		mainOutput: true,
+		inputValue: 0,
+		previousValue: 0
+	}
+	effects.push(effectModel)
+
+	addDistortionViewWithId(id)
 }
 
 function findConnectionIndexById(id) {
@@ -1116,6 +1172,7 @@ const updateControlViews = () => {
 			const shapeInput = oscillatorView.getElementsByTagName("input")[3]
 			const partialsInput = oscillatorView.getElementsByTagName("input")[4]
 			const syncInput = oscillatorView.getElementsByTagName("input")[5]
+			const mainOutputLED = oscillatorView.getElementsByClassName("main-output-led")[0]
 
 			frequencyInput.value = frequencyScalableParameterType.getSliderForUnscaledValue(oscillator.frequency)
 			amplitudeInput.value = amplitudeScalableParameterType.getSliderForUnscaledValue(oscillator.amplitude)
@@ -1123,12 +1180,17 @@ const updateControlViews = () => {
 			shapeInput.value = shapeScalableParameterType.getSliderForUnscaledValue(oscillator.shape)
 			partialsInput.value = partialsScalableParameterType.getSliderForUnscaledValue(oscillator.partials)
 			syncInput.value = syncScalableParameterType.getSliderForUnscaledValue(oscillator.sync)
+
+			// TODO: Make DRY
+			mainOutputLED.style.backgroundColor = oscillator.mainOutput ? "#1aff3d" : "#aaaaaa"
 		} else if (oscillator.type == "noise") {
 			const rateInput = oscillatorView.getElementsByTagName("input")[0]
 			const amplitudeInput = oscillatorView.getElementsByTagName("input")[1]
+			const mainOutputLED = oscillatorView.getElementsByClassName("main-output-led")[0]
 
 			rateInput.value = rateScalableParameterType.getSliderForUnscaledValue(oscillator.rate)
 			amplitudeInput.value = amplitudeScalableParameterType.getSliderForUnscaledValue(oscillator.amplitude)
+			mainOutputLED.style.backgroundColor = oscillator.mainOutput ? "#1aff3d" : "#aaaaaa"
 		}
 	}
 	
@@ -1198,6 +1260,148 @@ const onLoadPresetClicked = () => {
 	fileInput.click()
 }
 
+const onRandomPresetClicked = () => {
+	var presetObject = {}
+
+	var nextDeviceId = 1
+	const safeLimit = 100
+	var presetOscillators = []
+	var oscillatorsDone = false
+	var oscillatorCountForType = {}
+	while (!oscillatorsDone && presetOscillators.length < safeLimit) {
+		const types = ["oscillator", "noise"]
+		const typeTitles = ["Oscillator", "Noise oscillator"]
+		const typeIndex = Math.min(types.length - 1, Math.floor((Math.random() * types.length)))
+		const type = types[typeIndex]
+		const typeTitle = typeTitles[typeIndex]
+		if (!oscillatorCountForType[type]) {
+			oscillatorCountForType[type] = 0
+		}
+		const count = oscillatorCountForType[type]
+		const nameNumber = count + 1
+		const name = typeTitle + " " + nameNumber
+		var oscillator = {}
+
+		if (type == "oscillator") {
+			oscillator = {
+				id: nextDeviceId,
+				name: name,
+				type: type,
+				frequency: Math.random(),
+				amplitude: Math.random(),
+				phase: Math.random(),
+				shape: Math.random(),
+				partials: Math.random(),
+				sync: Math.random(),
+				mainOutput: Math.random() >= 0.5,
+				timedSignalX: 0,
+				syncTimedSignalX: 0,
+				previousValue: 0
+			}
+		} else if (type == "noise") {
+			oscillator = {
+				id: nextDeviceId,
+				name: name,
+				type: type,
+				rate: Math.random(),
+				amplitude: Math.random(),
+				mainOutput: Math.random() >= 0.5,
+				timedSignalX: 0,
+				previousValue: 0
+			}
+		}
+		
+			
+		presetOscillators.push(oscillator)
+		oscillatorCountForType[type] += 1
+		nextDeviceId += 1
+
+		oscillatorsDone = (Math.random() <= 0.5)
+	}
+
+	var presetEffects = []
+	var effectsDone = false
+	var effectTypes = ["distortion"]
+	var effectTypeTitles = ["Distortion"]
+	var effectCountForType = {}
+	while (!effectsDone && presetEffects.length < safeLimit) {
+		const typeIndex = Math.min(effectTypes.length - 1, Math.floor((Math.random() * effectTypes.length)))
+		const type = effectTypes[typeIndex]
+		const typeTitle = effectTypeTitles[typeIndex]
+		if (!effectCountForType[type]) {
+			effectCountForType[type] = 0
+		}
+		const count = effectCountForType[type]
+		const nameNumber = count + 1
+		const name = typeTitle + " " + nameNumber
+
+		var effect = {
+			id: nextDeviceId,
+			type: type,
+			name: name,
+			amount: Math.random(),
+			mainBus: Math.random() >= 0.5,
+			mainOutput: Math.random() >= 0.5,
+			inputValue: 0,
+			previousValue: 0
+		}
+		presetEffects.push(effect)
+		effectCountForType[type] += 1
+		nextDeviceId += 1
+
+		effectsDone = Math.random() <= 0.5
+	}
+
+	var presetConnections = []
+	var connectionsDone = false
+	const deviceCount = presetOscillators.length + presetEffects.length
+	while (!connectionsDone && presetConnections.length < safeLimit) {
+		var sourceId = 0
+		const sourceIdRandomVariable = Math.min(deviceCount - 1, Math.floor(Math.random() * deviceCount))
+		if (sourceIdRandomVariable < presetOscillators.length) {
+			sourceId = presetOscillators[sourceIdRandomVariable].id
+		} else if (sourceIdRandomVariable <= deviceCount) {
+			const index = sourceIdRandomVariable - presetOscillators.length
+			sourceId = presetEffects[index].id
+		}
+
+		var destinationId = 0
+		const destinationIdRandomVariable = Math.min(deviceCount - 1, Math.floor(Math.random() * deviceCount))
+		if (destinationIdRandomVariable < presetOscillators.length) {
+			destinationId = presetOscillators[destinationIdRandomVariable].id
+		} else if (destinationIdRandomVariable <= deviceCount) {
+			const index = destinationIdRandomVariable - presetOscillators.length
+			destinationId = presetEffects[index].id
+		}
+
+		const presetDevices = presetOscillators.concat(presetEffects)
+		const destinationType = presetDevices.find((device) => device.id === destinationId).type
+
+		const amount = Math.random()
+		const parameters = modulatableParametersForType(destinationType)
+		const parameterIndex = Math.min(parameters.length - 1, Math.floor(Math.random() * parameters.length))
+		const parameter = parameterIndex.toString()
+
+		const connection = {
+			id: nextDeviceId,
+			source: sourceId,
+			destination: destinationId,
+			amount: amount,
+			destinationParameter: parameter
+		}
+		presetConnections.push(connection)
+		nextDeviceId += 1
+
+		connectionsDone = Math.random() <= 0.5
+	}
+
+	presetObject.oscillators = presetOscillators
+	presetObject.connections = presetConnections
+	presetObject.effects = presetEffects
+
+	setSynthFromPresetObject(presetObject)
+}
+
 const loadPreset = (presetFile) => {
 	const reader = new FileReader()
 	reader.onload = (event) => {
@@ -1209,12 +1413,62 @@ const loadPreset = (presetFile) => {
 
 const setSynthFromPresetObject = (presetObject) => {
 	oscillators = presetObject.oscillators
-	connections = presetObject.connections
+
+	const oscillatorsView = document.getElementById("oscillators")
+	oscillatorsView.innerHTML = ""
+
+	const effectsView = document.getElementById("effects")
+	effectsView.innerHTML = ""
+
+	const connectionsView = document.getElementById("connections")
+	connectionsView.innerHTML = ""
+
+	for (let i = 0; i < oscillators.length; i++) {
+		const oscillator = oscillators[i]
+		const type = oscillator.type
+		if (type == "oscillator") {
+			addOscillatorViewWithId(oscillator.id)
+		} else if (type == "noise") {
+			addNoiseViewWithId(oscillator.id)
+		}
+	}
+
 	effects = presetObject.effects
+
+	for (let i = 0; i < effects.length; i++) {
+		if (effects[i].type == "distortion") {
+			addDistortionViewWithId(effects[i].id)
+		}
+	}
+
+	connections = presetObject.connections
+	for (let i = 0; i < connections.length; i++) {
+		addConnectionViewWithId(connections[i].id)
+	}
+	
+	
 	updateConnectionPartyCaches()
 	updateDropDowns()
+	updateConnectionDropdownSelectionsFromModel()
 	updateOscilloscope()
 	updateControlViews()
+}
+
+const updateConnectionDropdownSelectionsFromModel = () => {
+	const sourceSelectors = document.getElementsByClassName("source-selector")
+	const destinationSelectors = document.getElementsByClassName("destination-selector")
+	const destinationParameterSelectors = document.getElementsByClassName("destination-parameter-selector")
+
+	for (let i = 0; i < connections.length; i++) {
+		const connection = connections[i]
+		const sourceSelector = sourceSelectors[i]
+		const destinationSelector = destinationSelectors[i]
+		const destinationParameterSelector = destinationParameterSelectors[i]
+
+		sourceSelector.value = connection.source
+		destinationSelector.value = connection.destination
+		destinationParameterSelector.value = connection.destinationParameter
+	}
 }
 
 addOscillator()
