@@ -1,8 +1,6 @@
 let oscilloscopeWidth = 400
 let oscilloscopeHeight = 100
 
-let oscilloscope = document.getElementsByClassName("oscilloscope")[0]
-
 let playingVolume = 0
 let playingEnvelopeAttack = 0.02
 let playingEnvelopeRelease = 0.1
@@ -44,6 +42,8 @@ var connectionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
 // Distortion
 var distortionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
 
+const oscilloscope = new Oscilloscope(oscilloscopeWidth, oscilloscopeHeight)
+const oscilloscopeContainer = document.getElementById("oscilloscope-container")
 
 function getUnscaledSliderValue(value) {
 	return value / 1000
@@ -317,25 +317,11 @@ function calculateBuffer(length, scale) {
 }
 
 function updateOscilloscope() {
-	oscilloscope.innerHTML = ""
-
 	let oscillatorWidthsPerSecond = 50
 	let pixelsPerSecond = oscillatorWidthsPerSecond * oscilloscopeWidth
 	let outputBuffer = calculateBuffer(oscilloscopeWidth, pixelsPerSecond)
 
-	for (let i = 0; i < oscilloscopeWidth; i++) {
-		let line = document.createElement("div")
-		let height = ((outputBuffer[i] + 1) / 2) * oscilloscopeHeight
-		let clippedHeight = Math.min(oscilloscopeHeight, Math.max(0, height))
-		line.style.height = clippedHeight + 'px'
-		line.style.position = "absolute"
-		line.style.bottom = "0px"
-		line.style.left = i.toString() + 'px'
-		line.style.width = "1px"
-		line.style.backgroundColor = "green"
-	
-		oscilloscope.appendChild(line)
-	}
+	oscilloscope.updateFromBuffer(outputBuffer)
 }
 
 function onKeyDown(event) {
@@ -1489,9 +1475,13 @@ const onMainVolumeChanged = (event) => {
 	mainVolume = getUnscaledSliderValue(event.target.value)
 }
 
+function main() {
+	oscilloscope.appendToView(oscilloscopeContainer);
+	updateMainVolumeSliderFromModel();
+	addOscillator();
+	addConnection();
+	setTab(0);
+	updateOscilloscope();
+}
 
-updateMainVolumeSliderFromModel()
-addOscillator()
-addConnection()
-setTab(0)
-updateOscilloscope()
+main()
