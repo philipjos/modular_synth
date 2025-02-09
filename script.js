@@ -381,7 +381,9 @@ function play() {
 	source.start(audioCtx.currentTime);
 }
 
-function addOscillatorViewWithId(id) {
+function addOscillatorViewFromModel(model) {
+	const id = model.id
+	const name = model.name
 	const oscillatorsView = document.getElementById("oscillators");
 	
 	const oscillator = document.createElement("div");
@@ -560,14 +562,15 @@ function addOscillator() {
 	}
 
 	oscillators.push(oscillatorModel)
-	addOscillatorViewWithId(id)
+	addOscillatorViewFromModel(oscillatorModel)
 }
 
 function findOscillatorIndexById(id) {
 	return oscillators.findIndex((oscillator) => oscillator.id === id)
 }
 
-function addConnectionViewWithId(id) {
+function addConnectionViewFromModel(model) {
+	const id = model.id
 	const connctionsView = document.getElementById("connections");
 
 	const connection = document.createElement("div");
@@ -690,10 +693,12 @@ function addConnection() {
 	}
 
 	connections.push(connectionModel)
-	addConnectionViewWithId(id)
+	addConnectionViewFromModel(connectionModel)
 }
 
-const addNoiseViewWithId = (id) => {
+const addNoiseViewFromModel = (model) => {
+	const id = model.id
+	const name = model.name
 
 	const oscillatorsView = document.getElementById("oscillators");
 	
@@ -801,16 +806,18 @@ function addNoise() {
 	}
 
 	oscillators.push(noiseModel)
-	addNoiseViewWithId(id)
+	addNoiseViewFromModel(noiseModel)
 }
 
-function addDistortionViewWithId(id) {
+function addDistortionViewFromModel(model) {
+	const id = model.id;
+	const name = model.name;
 	const effectsView = document.getElementById("effects");
 	const effectView = document.createElement("div");
 	effectView.classList.add("effect");
 	
 	const effectTitle = document.createElement("div");
-	effectTitle.innerHTML = "Distortion";
+	effectTitle.innerHTML = name;
 	effectTitle.classList.add("device-title");
 	effectTitle.classList.add("text");
 	effectView.appendChild(effectTitle);
@@ -922,7 +929,7 @@ function addDistortion() {
 	}
 	effects.push(effectModel)
 
-	addDistortionViewWithId(id)
+	addDistortionViewFromModel(effectModel)
 }
 
 function findConnectionIndexById(id) {
@@ -1422,9 +1429,9 @@ const setSynthFromPresetObject = (presetObject) => {
 		const oscillator = oscillators[i]
 		const type = oscillator.type
 		if (type == "oscillator") {
-			addOscillatorViewWithId(oscillator.id)
+			addOscillatorViewFromModel(oscillator)
 		} else if (type == "noise") {
-			addNoiseViewWithId(oscillator.id)
+			addNoiseViewFromModel(oscillator)
 		}
 	}
 
@@ -1432,13 +1439,13 @@ const setSynthFromPresetObject = (presetObject) => {
 
 	for (let i = 0; i < effects.length; i++) {
 		if (effects[i].type == "distortion") {
-			addDistortionViewWithId(effects[i].id)
+			addDistortionViewFromModel(effects[i])
 		}
 	}
 
 	connections = presetObject.connections
 	for (let i = 0; i < connections.length; i++) {
-		addConnectionViewWithId(connections[i].id)
+		addConnectionViewFromModel(connections[i])
 	}
 	
 	
