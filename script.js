@@ -1501,6 +1501,7 @@ function main() {
 	updateMainVolumeSliderFromModel();
 	addOscillator();
 	addConnection();
+	setTab(0);
 	updateOscilloscope();
 }
 
