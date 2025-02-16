@@ -1,4 +1,4 @@
-let oscilloscopeWidth = 400
+let oscilloscopeWidth = 500
 let oscilloscopeHeight = 100
 
 let playingVolume = 0
@@ -404,6 +404,7 @@ function addOscillatorViewFromModel(model) {
 	frequencyInput.min = 0;
 	frequencyInput.max = 1000;
 	frequencyInput.value = sliderDefaultViewValue;
+	frequencyInput.style.marginBottom = "20px";
 	oscillator.appendChild(frequencyText);
 	oscillator.appendChild(frequencyInput);
 
@@ -415,6 +416,7 @@ function addOscillatorViewFromModel(model) {
 	amplitudeInput.min = 0;
 	amplitudeInput.max = 1000;
 	amplitudeInput.value = sliderDefaultViewValue;
+	amplitudeInput.style.marginBottom = "20px";
 	oscillator.appendChild(amplitudeText);
 	oscillator.appendChild(amplitudeInput);
 
@@ -426,6 +428,7 @@ function addOscillatorViewFromModel(model) {
 	phaseInput.min = 0;
 	phaseInput.max = 1000;
 	phaseInput.value = phaseSliderDefaultViewValue;
+	phaseInput.style.marginBottom = "20px";
 	oscillator.appendChild(phaseText);
 	oscillator.appendChild(phaseInput);
 
@@ -437,6 +440,7 @@ function addOscillatorViewFromModel(model) {
 	shapeInput.min = 0;
 	shapeInput.max = 1000;
 	shapeInput.value = shapeSliderDefaultValue;
+	shapeInput.style.marginBottom = "20px";
 	oscillator.appendChild(shapeText);
 	oscillator.appendChild(shapeInput);
 
@@ -448,6 +452,7 @@ function addOscillatorViewFromModel(model) {
 	partialsInput.min = 0;
 	partialsInput.max = 1000;
 	partialsInput.value = partialsSliderDefaultViewValue;
+	partialsInput.style.marginBottom = "20px";
 	oscillator.appendChild(partialsText);
 	oscillator.appendChild(partialsInput);
 
@@ -459,6 +464,7 @@ function addOscillatorViewFromModel(model) {
 	syncInput.min = 0;
 	syncInput.max = 1000;
 	syncInput.value = syncSliderDefaultValue;
+	syncInput.style.marginBottom = "20px";
 	oscillator.appendChild(syncText);
 	oscillator.appendChild(syncInput);
 
@@ -513,7 +519,7 @@ function addOscillatorViewFromModel(model) {
 		oscillators[index].mainOutput = !oscillators[index].mainOutput;
 		const ledViews = document.getElementsByClassName("main-output-led")
 		const ledView = ledViews[index]
-		ledView.style.backgroundColor = oscillators[index].mainOutput ? "#1aff3d" : "#aaaaaa"
+		ledView.style.backgroundColor = oscillators[index].mainOutput ? "#19F1FF" : "#aaaaaa"
 		updateOscilloscope()
 	})
 	mainOutputSection.appendChild(mainOutputButton)
@@ -720,6 +726,7 @@ const addNoiseViewFromModel = (model) => {
 	rateInput.min = 0;
 	rateInput.max = 1000;
 	rateInput.value = rateSliderDefaultValue;
+	rateInput.style.marginBottom = "20px";
 	noiseOscillator.appendChild(rateText);
 	noiseOscillator.appendChild(rateInput);
 
@@ -731,6 +738,7 @@ const addNoiseViewFromModel = (model) => {
 	amplitudeInput.min = 0;
 	amplitudeInput.max = 1000;
 	amplitudeInput.value = sliderDefaultViewValue;
+	amplitudeInput.style.marginBottom = "20px";
 	noiseOscillator.appendChild(amplitudeText);
 	noiseOscillator.appendChild(amplitudeInput);
 
@@ -761,7 +769,7 @@ const addNoiseViewFromModel = (model) => {
 		oscillators[index].mainOutput = !oscillators[index].mainOutput;
 		const ledViews = document.getElementsByClassName("main-output-led")
 		const ledView = ledViews[index]
-		ledView.style.backgroundColor = oscillators[index].mainOutput ? "#1aff3d" : "#aaaaaa"
+		ledView.style.backgroundColor = oscillators[index].mainOutput ? "#19F1FF" : "#aaaaaa"
 		updateOscilloscope()
 	})
 	mainOutputSection.appendChild(mainOutputButton)
@@ -861,7 +869,7 @@ function addDistortionViewFromModel(model) {
 		effects[index].mainBus = !effects[index].mainBus;
 		const ledViews = document.getElementsByClassName("main-bus-led")
 		const ledView = ledViews[index]
-		ledView.style.backgroundColor = effects[index].mainBus ? "#1aff3d" : "#aaaaaa"
+		ledView.style.backgroundColor = effects[index].mainBus ? "#19F1FF" : "#aaaaaa"
 		updateConnectionPartyCaches()
 		updateDropDowns()
 		updateOscilloscope()
@@ -884,7 +892,7 @@ function addDistortionViewFromModel(model) {
 		effects[index].mainOutput = !effects[index].mainOutput;
 		const ledViews = document.getElementsByClassName("effects-main-output-led")
 		const ledView = ledViews[index]
-		ledView.style.backgroundColor = effects[index].mainOutput ? "#1aff3d" : "#aaaaaa"
+		ledView.style.backgroundColor = effects[index].mainOutput ? "#19F1FF" : "#aaaaaa"
 		updateOscilloscope()
 	})
 	mainOutputSection.appendChild(mainOutputButton)
@@ -917,10 +925,13 @@ function addDistortionViewFromModel(model) {
 
 function addDistortion() {
 	let id = generateNewDeviceId();
+	let nameNumber = effects.filter((effect) => effect.type === "distortion").length + 1;
+	let name = "Distortion " + nameNumber;
 	let sliderDefaultViewValue = 500
 	let effectModel = {
 		id: id,
 		type: "distortion",
+		name: name,
 		amount: getUnscaledSliderValue(sliderDefaultViewValue),
 		mainBus: false,
 		mainOutput: true,
@@ -1184,7 +1195,7 @@ const updateControlViews = () => {
 			syncInput.value = syncScalableParameterType.getSliderForUnscaledValue(oscillator.sync)
 
 			// TODO: Make DRY
-			mainOutputLED.style.backgroundColor = oscillator.mainOutput ? "#1aff3d" : "#aaaaaa"
+			mainOutputLED.style.backgroundColor = oscillator.mainOutput ? "#19F1FF" : "#aaaaaa"
 		} else if (oscillator.type == "noise") {
 			const rateInput = oscillatorView.getElementsByTagName("input")[0]
 			const amplitudeInput = oscillatorView.getElementsByTagName("input")[1]
@@ -1192,7 +1203,7 @@ const updateControlViews = () => {
 
 			rateInput.value = rateScalableParameterType.getSliderForUnscaledValue(oscillator.rate)
 			amplitudeInput.value = amplitudeScalableParameterType.getSliderForUnscaledValue(oscillator.amplitude)
-			mainOutputLED.style.backgroundColor = oscillator.mainOutput ? "#1aff3d" : "#aaaaaa"
+			mainOutputLED.style.backgroundColor = oscillator.mainOutput ? "#19F1FF" : "#aaaaaa"
 		}
 	}
 	
@@ -1212,6 +1223,9 @@ const updateControlViews = () => {
 			const amountInput = effectView.getElementsByTagName("input")[0]
 			
 			amountInput.value = distortionAmountScalableParameterType.getSliderForUnscaledValue(effect.amount)
+
+			const mainOutputLED = effectView.getElementsByClassName("effects-main-output-led")[0]
+			mainOutputLED.style.backgroundColor = effect.mainOutput ? "#19F1FF" : "#aaaaaa"
 		}
 	}
 }
@@ -1487,7 +1501,7 @@ function main() {
 	updateMainVolumeSliderFromModel();
 	addOscillator();
 	addConnection();
-	setTab(0);
+	setTab(1);
 	updateOscilloscope();
 }
 

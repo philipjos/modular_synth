@@ -1,5 +1,5 @@
 :root {
-    --main-width: 400px;
+    --main-width: 500px;
 }
 
 body {
@@ -13,7 +13,6 @@ body {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    overflow-x: hidden;
     width: var(--main-width);
 }
 
@@ -25,16 +24,20 @@ body {
     align-items: center;
     padding: 8px 12px 8px 8px;
     white-space: nowrap;
+    border-radius: 4px;
 
-    background-color: #CCDDDF;
-}
-
-.main-volume-section input {
-    margin: 0px;
+    background-color: aliceblue;
 }
 
 .top-actions-section {
     margin: 8px 0px 0px 0px;
+    display: flex;
+    gap: 12px;
+}
+
+#oscilloscope-container {
+    border-radius: 4px;
+    overflow: hidden;
 }
 
 .oscilloscope {
@@ -44,7 +47,10 @@ body {
     display: flex;
     position: relative;
     margin: 0px 0px 0px 0px;
+    border-radius: 4px;
+    overflow: hidden;
 }
+
 
 #devices-section {
     display: flex;
@@ -52,19 +58,25 @@ body {
     overflow-y: hidden;
     height: 400px;
     background-color: aliceblue;
-    padding: 8px;
+    padding: 12px;
+    gap: 4px;
 }
 
 .tab-selector {
     margin: 0px 0px 8px 0px;
+    display: flex;
+    gap: 12px;
 }
 
 .oscillator, .connection, .effect {
     background-color: #CCDDDF;
+    border-radius: 4px;
     padding: 8px;
     position: relative;
     top: 0px;
     left: 0px;
+    margin: 0px 0px 8px 0px;
+
 }
 
 .amount-section {
@@ -75,31 +87,26 @@ body {
     font-family: 'Courier New', Courier, monospace;
 }
 
-input {
-    width: 100%;
-    margin: 0px 0px 8px 0px;
-    
-    /* Make non highlightable */
-    outline: none;
-}
-
 .actions-section {
     display: flex;
     align-items: flex-start;
     justify-content: flex-start;
-    gap: 8px;
-    background-color: #CCDDDF;
+    gap: 12px;
+    background-color: aliceblue;
     margin: 0px 0px 0px 0px;
-    padding: 8px;
+    padding: 12px 12px;
+    border-radius: 4px;
     box-sizing: border-box;
     width: var(--main-width);
     overflow-x: scroll;
 }
 
-.actions-section button {
+button, .main-output-button, .main-bus-button {
     padding: 8px 16px;
     border: none;
-    background-color: #FFA07A;
+    background-color: #ffffff;
+    box-shadow: 0px 0px 5px 1px #19f0ff31;
+    border-radius: 2px;
     cursor: pointer;
     white-space: nowrap;
 }
@@ -132,14 +139,20 @@ input {
 .pair-row {
     display: flex;
     gap: 8px;
-    align-items: center;
-    justify-content: space-between;
+    align-items: flex-start;
     margin: 0px 0px 8px 0px;
 }
 
 .source-section, .destination-section {
     display: flex;
     gap: 8px;
+    width: 100%;
+}
+
+.source-section .text, .destination-section .text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .destination-section {
@@ -149,13 +162,6 @@ input {
 .destination-oscillator-section, .destination-parameter-section {
     display: flex;
     gap: 8px;
-    justify-content: space-between;
-}
-
-.source-section {
-    display: flex;
-    align-items: flex-start;
-    height: 100%;
 }
 
 .tabs {
@@ -179,15 +185,15 @@ input {
     position: absolute;
     top: 4px;
     right: 4px;
-    background-color: #FFA07A;
-    border: 2px solid #b9613e;
+    background-color: #e1fafc;
+    border: 2px solid #cff8ff;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 0px 0px 3px 0px;
     box-sizing: border-box;
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-    color: #a13636;
+    color: #00a9b6;
     font-size: 11px;
 
     cursor: pointer;
@@ -214,7 +220,6 @@ input {
 }
 
 .main-output-button, .main-bus-button {
-    background-color: #FFA07A;
     padding: 8px 8px 8px 8px;
     border: none;
     cursor: pointer;
@@ -224,7 +229,56 @@ input {
     width: 4px;
     height: 4px;
     border-radius: 50vw;
-    background-color: #1aff3d;
+    background-color: #19F1FF;
     border: 1px solid #384037;
     margin: 0px 0px 0px 4px;
+}
+
+input[type="range"] {
+    /* Make non highlightable */
+    outline: none;
+    width: 100%;
+    height: 30px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #ffffff;
+    border: 2px solid #eeeeee;
+    border-radius: 5px;
+    margin: 12px 0px 12px 0px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 44px;
+    height: 44px;
+    background: #ffffff;
+    box-shadow: 0px 0px 5px 1px #19F1FF;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 30px;
+    height: 30px;
+    background: #ffffff;
+    box-shadow: 0px 0px 0px 2px #ffffff, 0px 0px 0px 6px #19F1FF;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* Selector drop downs */
+
+select {
+    appearance: none;
+    width: 100%;
+    padding: 12px 40px 12px 16px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 2px solid #eeeeee;
+    background: white;
+    color: #333;
+    cursor: pointer;
+    transition: 0.3s;
+    outline: none;
 }

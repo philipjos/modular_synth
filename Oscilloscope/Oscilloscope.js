@@ -31,7 +31,7 @@ class Oscilloscope {
             line.style.bottom = "0px"
             line.style.left = i.toString() + 'px'
             line.style.width = "1px"
-            line.style.backgroundColor = "green"
+            line.style.backgroundColor = "19F1FF"
         
             this.element.appendChild(line)
         }
