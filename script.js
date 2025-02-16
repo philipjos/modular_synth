@@ -1,4 +1,4 @@
-let oscilloscopeWidth = 500
+let oscilloscopeWidth = 300
 let oscilloscopeHeight = 100
 
 let playingVolume = 0
@@ -1501,7 +1501,6 @@ function main() {
 	updateMainVolumeSliderFromModel();
 	addOscillator();
 	addConnection();
-	setTab(1);
 	updateOscilloscope();
 }
 

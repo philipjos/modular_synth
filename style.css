@@ -1,5 +1,5 @@
 :root {
-    --main-width: 500px;
+    --main-width: 300px;
 }
 
 body {
@@ -7,6 +7,8 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    padding: 0px;
+    margin: 0px;
 }
 
 .main-container {
@@ -14,6 +16,9 @@ body {
     flex-direction: column;
     gap: 16px;
     width: var(--main-width);
+    height: 95vh;
+    padding: 8px 0px 0px 0px;
+    box-sizing: border-box;
 }
 
 .main-volume-section {
@@ -33,6 +38,11 @@ body {
     margin: 8px 0px 0px 0px;
     display: flex;
     gap: 12px;
+    width: var(--main-width);
+    overflow-x: scroll;
+    padding: 12px 12px;
+    background-color: aliceblue;
+    box-sizing: border-box;
 }
 
 #oscilloscope-container {
@@ -56,10 +66,10 @@ body {
     display: flex;
     flex-direction: column;
     overflow-y: hidden;
-    height: 400px;
     background-color: aliceblue;
     padding: 12px;
     gap: 4px;
+    height: calc(100vh - 500px)
 }
 
 .tab-selector {
@@ -112,14 +122,21 @@ button, .main-output-button, .main-bus-button {
 }
 
 .play-sound-text {
-    position: absolute;
-    bottom: 16px;
-    right: 0px;
-    width: 100%;
+    margin: 0px 0px 8px 0px;
 }
 
-.center-text {
-    text-align: center;
+.play-sound-text .wrapper {
+    display: flex;
+    justify-content: center;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.play-sound-text .text {
+    background-color: aliceblue;
+    border: 2px solid #CCDDDF;
+    color: #000000;
+    padding: 4px 8px;
+    border-radius: 4px;
 }
 
 .device-title {
@@ -140,6 +157,7 @@ button, .main-output-button, .main-bus-button {
     display: flex;
     gap: 8px;
     align-items: flex-start;
+    flex-direction: column;
     margin: 0px 0px 8px 0px;
 }
 
