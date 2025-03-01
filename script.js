@@ -45,6 +45,8 @@ var distortionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
 const oscilloscope = new Oscilloscope(oscilloscopeWidth, oscilloscopeHeight)
 const oscilloscopeContainer = document.getElementById("oscilloscope-container")
 
+var dropdownStates = {}
+
 function getUnscaledSliderValue(value) {
 	return value / 1000
 }
@@ -325,6 +327,10 @@ function updateOscilloscope() {
 }
 
 function onKeyDown(event) {
+	triggerPlay()
+}
+
+function triggerPlay() {
 	playingEnvelopeState = "attack"
 	play()
 }
@@ -1173,7 +1179,7 @@ function setPropertyOfConnectionPartyDeviceWithId(id, property, value) {
 	}
 }
 
-const updateControlViews = () => {
+function updateControlViews() {
 	for (let i = 0; i < oscillators.length; i++) {
 		const oscillator = oscillators[i]
 		const oscillatorView = document.getElementsByClassName("oscillator")[i]
@@ -1250,7 +1256,7 @@ async function saveFile(suggestedName, content) {
     }
 }
 
-const onSavePresetClicked = () => {
+function onSavePresetClicked() {
 	const presetObject = {
 		oscillators: oscillators,
 		connections: connections,
@@ -1262,7 +1268,7 @@ const onSavePresetClicked = () => {
 	saveFile('modular_synth_preset.json', presetString);
 }
 
-const onLoadPresetClicked = () => {
+function onLoadPresetClicked() {
 	// Open file dialog
 	const fileInput = document.createElement("input")
 	fileInput.type = "file"
@@ -1276,7 +1282,7 @@ const onLoadPresetClicked = () => {
 	fileInput.click()
 }
 
-const onRandomPresetClicked = () => {
+function onRandomPresetClicked () {
 	var presetObject = {}
 
 	var nextDeviceId = 1
@@ -1470,7 +1476,7 @@ const setSynthFromPresetObject = (presetObject) => {
 	updateControlViews()
 }
 
-const updateConnectionDropdownSelectionsFromModel = () => {
+function updateConnectionDropdownSelectionsFromModel() {
 	const sourceSelectors = document.getElementsByClassName("source-selector")
 	const destinationSelectors = document.getElementsByClassName("destination-selector")
 	const destinationParameterSelectors = document.getElementsByClassName("destination-parameter-selector")
@@ -1487,7 +1493,7 @@ const updateConnectionDropdownSelectionsFromModel = () => {
 	}
 }
 
-const updateMainVolumeSliderFromModel = () => {
+function updateMainVolumeSliderFromModel() {
 	const mainVolumeSlider = document.getElementById("main-volume-slider")
 	mainVolumeSlider.value = mainVolumeScalableParameterType.getSliderForUnscaledValue(mainVolume)
 }
@@ -1496,7 +1502,43 @@ const onMainVolumeChanged = (event) => {
 	mainVolume = getUnscaledSliderValue(event.target.value)
 }
 
+function dropdownClicked(event, dropdown_id) {
+	Object.keys(dropdownStates).forEach((key) => {
+		if (key != dropdown_id) {
+			dropdownStates[key] = false
+			const dropdown = document.getElementsByClassName("dropdown")[key]
+			const dropdownContent = dropdown.getElementsByClassName("dropdown-content")[0]
+			dropdownContent.style.display = "none"
+		}
+	})
+	if (dropdownStates[dropdown_id] === undefined) {
+		dropdownStates[dropdown_id] = true
+	} else {
+		dropdownStates[dropdown_id] = !dropdownStates[dropdown_id]
+	}
+
+	const dropdown = document.getElementsByClassName("dropdown")[dropdown_id]
+	const dropdownContent = dropdown.getElementsByClassName("dropdown-content")[0]
+	dropdownContent.style.display = dropdownStates[dropdown_id] ? "block" : "none"
+}
+
+function addTapOutHandler() {
+	document.addEventListener("click", (event) => {
+		const dropdowns = document.getElementsByClassName("dropdown")
+		for (let i = 0; i < dropdowns.length; i++) {
+			const dropdown = dropdowns[i]
+			const dropdownButton = dropdown.getElementsByClassName("dropdown-expander")[0]
+			const dropdownContent = dropdown.getElementsByClassName("dropdown-content")[0]
+			if (!dropdownButton.contains(event.target)) {
+				dropdownContent.style.display = "none"
+				dropdownStates[i] = false
+			}
+		}
+	})
+}
+
 function main() {
+	addTapOutHandler()
 	oscilloscope.appendToView(oscilloscopeContainer);
 	updateMainVolumeSliderFromModel();
 	addOscillator();

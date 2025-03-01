@@ -6,17 +6,6 @@
     onKeyDown="onKeyDown(event)"
 >
     <div class="main-container">
-        <div class="top-actions-section">
-            <button onClick="onSavePresetClicked()">
-                Save preset
-            </button>
-            <button onClick="onLoadPresetClicked()">
-                Load preset
-            </button>
-            <button onClick="onRandomPresetClicked()">
-                Random preset
-            </button>
-        </div>
         <div class="main-volume-section">
             <div class="center-text text">
                 Main volume
@@ -35,31 +24,123 @@
         <div id="oscilloscope-container">
         </div>
         <div class="actions-section">
-            <button onClick="onAddOscillatorClicked()">
-                Add oscillator
+            <div 
+                class="dropdown"
+            >
+                <button
+                    class="dropdown-expander"
+                    onClick="dropdownClicked(event, 0)"
+                >
+                    ➕
+                </button>
+                <div class="dropdown-anchor">
+                    <div 
+                        class="dropdown-content left"
+                        style="display: none"
+                    >
+                        <div
+                            class="dropdown-item"
+                            onClick="onAddOscillatorClicked()"
+                        >
+                            Oscillator
+                        </div>
+                        <div
+                            class="dropdown-item"
+                            onClick="onAddNoiseClicked()"
+                        >
+                            Noise
+                        </div>
+                        <div
+                            class="dropdown-item"
+                            onClick="onAddConnectionClicked()"
+                        >
+                            Connection
+                        </div>
+                        <div
+                            class="dropdown-item"
+                            onClick="onAddDistortionClicked()"
+                        >
+                            Distortion
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div 
+                class="dropdown"
+            >
+                <button
+                    class="dropdown-expander"
+                    onClick="dropdownClicked(event, 1)"
+                >
+                    👀
+                </button>
+                <div class="dropdown-anchor">
+                    <div 
+                        class="dropdown-content left"
+                        style="display: none"
+                    >
+                        <div
+                            class="dropdown-item"
+                            onClick="setTab(0)"
+                        >
+                            Oscillators
+                        </div>
+                        <div
+                            class="dropdown-item"
+                            onClick="setTab(1)"
+                        >
+                            Connections
+                        </div>
+                        <div
+                            class="dropdown-item"
+                            onClick="setTab(2)"
+                        >
+                            Effects
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button 
+                onClick="onRandomPresetClicked()"
+            >
+                🎲
             </button>
-            <button onClick="onAddConnectionClicked()">
-                Add connection
+            <button 
+                onClick="triggerPlay()"
+            >
+                ▶️
             </button>
-            <button onClick="onAddNoiseClicked()">
-                Add noise
-            </button>
-            <button onClick="onAddDistortionClicked()">
-                Add distortion
-            </button>
+            <div 
+                class="dropdown"
+            >
+                <button
+                    class="dropdown-expander"
+                    onClick="dropdownClicked(event, 2)"
+                >
+                ...
+                </button>
+                <div class="dropdown-anchor">
+                    <div 
+                        class="dropdown-content right"
+                        style="display: none"
+                    >
+                        <div
+                            class="dropdown-item"
+                            onClick="onSavePresetClicked()"
+                        >
+                            Save preset
+                        </div>
+                        <div
+                            class="dropdown-item"
+                            onClick="onLoadPresetClicked()"
+                        >
+                            Load preset
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div id="devices-section">
-            <div class="tab-selector">
-                <button onClick="onTabClicked(0)">
-                    Oscillators
-                </button>
-                <button onClick="onTabClicked(1)">
-                    Connections
-                </button>
-                <button onClick="onTabClicked(2)">
-                    Effects
-                </button>
-            </div>
             <div class="tabs">
                 <div id="oscillators" class="tab">
                 </div>
