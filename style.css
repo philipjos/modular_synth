@@ -16,7 +16,6 @@ body {
     flex-direction: column;
     gap: 16px;
     width: var(--main-width);
-    height: 95vh;
     padding: 8px 0px 0px 0px;
     box-sizing: border-box;
 }
@@ -69,7 +68,7 @@ body {
     background-color: aliceblue;
     padding: 12px;
     gap: 4px;
-    height: calc(100vh - 500px)
+    height: calc(100vh - 400px)
 }
 
 .tab-selector {
@@ -347,5 +346,9 @@ select {
 
     .main-volume-section {
         display: none;
+    }
+
+    #devices-section {
+        height: calc(100vh - 250px);
     }
 }
