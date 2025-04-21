@@ -44,8 +44,11 @@ var distortionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
 
 const oscilloscope = new Oscilloscope(oscilloscopeWidth, oscilloscopeHeight)
 const oscilloscopeContainer = document.getElementById("oscilloscope-container")
+const effectsView = document.getElementById("effects");
 
 var dropdownStates = {}
+
+var availableEffects = [Delay]
 
 function getUnscaledSliderValue(value) {
 	return value / 1000
@@ -1345,6 +1348,7 @@ function onRandomPresetClicked () {
 	var effectsDone = false
 	var effectTypes = ["distortion"]
 	var effectTypeTitles = ["Distortion"]
+
 	var effectCountForType = {}
 	while (!effectsDone && presetEffects.length < safeLimit) {
 		const typeIndex = Math.min(effectTypes.length - 1, Math.floor((Math.random() * effectTypes.length)))
@@ -1537,14 +1541,31 @@ function addTapOutHandler() {
 	})
 }
 
-function main() {
-	addTapOutHandler()
-	oscilloscope.appendToView(oscilloscopeContainer);
-	updateMainVolumeSliderFromModel();
-	addOscillator();
-	addConnection();
-	setTab(0);
-	updateOscilloscope();
+function onAddDeviceClicked(event, deviceType) {
+	const device = new deviceType()
+	device.appendToView(effectsView)
+	let nameNumber = effects.filter((effect) => effect.type === deviceType.typeId).length + 1;
+	device.setDeviceTitle(deviceType.typeDisplayName + " " + nameNumber)
 }
 
-main()
+addTapOutHandler()
+oscilloscope.appendToView(oscilloscopeContainer);
+updateMainVolumeSliderFromModel();
+addOscillator();
+addConnection();
+setTab(0);
+updateOscilloscope();
+
+const devicesDropdown = document.getElementsByClassName("dropdown-content")[0]
+
+for (let i = 0; i < availableEffects.length; i++) {
+	const effect = availableEffects[i]
+	const effectDropdownItem = document.createElement("div")
+	effectDropdownItem.classList.add("dropdown-item")
+	effectDropdownItem.innerHTML = effect.typeDisplayName
+
+	effectDropdownItem.addEventListener("click", (e) => {
+		this.onAddDeviceClicked(e, effect)
+	})
+	devicesDropdown.appendChild(effectDropdownItem)
+}
