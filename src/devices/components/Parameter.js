@@ -1,35 +1,23 @@
 class Parameter extends View {
     constructor(
-        typeId,
-        typeDisplayName,
-        min,
-        max,
-        defaultValue,
-        step
+        id,
+        displayName
     ) {
         super()
-        this.typeId = typeId
-        this.typeDisplayName = typeDisplayName
-        this.min = min
-        this.max = max
-        this.defaultValue = defaultValue
-        this.step = step
+        this.id = id
+        this.displayName = displayName
 
         this.setupView()
     }
 
     setupView() {
-        const slider = document.createElement("input");
-        slider.type = "range";
-        slider.min = this.min;
-        slider.max = this.max;
-        slider.value = this.defaultValue;
-        slider.classList.add("parameter-slider");
-        slider.addEventListener("input", (event) => {
-            this.value = event.target.value;
-        })
+        const titleView = document.createElement("div")
+        titleView.innerHTML = this.displayName
+        this.view.appendChild(titleView)
+    }
 
-        this.view.appendChild(slider)
+    setBottomMargin(margin) {
+        this.view.style.marginBottom = margin + "px"
     }
 
 }

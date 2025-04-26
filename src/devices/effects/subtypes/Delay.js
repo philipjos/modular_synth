@@ -7,7 +7,7 @@ class Delay extends Effect {
         this.sampleRate = sampleRate
         this.memory = []
         this.setParametersAndSetup({
-            time: new Parameter(
+            time: new NumericalParameter(
                 "time",
                 "Time",
                 0,
@@ -15,7 +15,7 @@ class Delay extends Effect {
                 100,
                 0
             ),
-            feedback: new Parameter(
+            feedback: new NumericalParameter(
                 "feedback",
                 "Feedback",
                 0,

@@ -1,0 +1,2 @@
+class Oscillator extends OutputDevice {
+}

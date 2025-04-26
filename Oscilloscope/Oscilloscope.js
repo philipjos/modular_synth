@@ -17,7 +17,6 @@ class Oscilloscope {
     }
 
     updateFromBuffer(buffer) {
-        console.log("Updating oscilloscope from buffer", buffer)
         this.buffer = buffer
         this.element.innerHTML = ""
         
