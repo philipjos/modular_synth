@@ -510,7 +510,6 @@ function addOscillatorViewFromModel(model) {
 	oscillator.appendChild(syncInput);
 
 	oscillatorsView.appendChild(oscillator);
-	console.log("Oscillator -- ")
 
 	frequencyInput.addEventListener("input", (event) => {
 		const index = findOscillatorIndexById(id)
@@ -1585,18 +1584,16 @@ function onAddDeviceClicked(deviceType) {
 
 function addDevice(deviceType) {
 	const device = new deviceType()
+	device.setOnDeviceChanged(onDeviceChanged)
 
 	if (device instanceof Oscillator) {
 		device.appendToView(oscillatorsView)
 
 		let nameNumber = oscillators_old.filter((oscillator) => oscillator.type === deviceType.typeId).length + 1;
 		const deviceTitle = deviceType.typeDisplayName + " " + nameNumber
-        console.log("Device title:" + deviceTitle)
 		device.setDeviceTitle(deviceTitle)
 
         oscillators.push(device)
-		console.log("1 - oscillators", oscillators)
-		console.log(getOutputDevices())
 	} else if (device instanceof Connection) {
         device.appendToView(connectionsView)
         let nameNumber = connections_old.filter((connection) => connection.type === deviceType.typeId).length + 1;
@@ -1622,24 +1619,12 @@ function updateOptionsOfConnection(connection) {
 
 	fromSelector.setOptionsFromObjectsAndUpdateDropdown(outputDevices)
 
-	console.log("outputDevices")
-	console.log(outputDevices)
-	console.log("Seting to selector in updateOptionsOfConnection")
 	toSelector.setOptionsFromObjectsAndUpdateDropdown(outputDevices)
-	console.log("Done seting to selector in updateOptionsOfConnection")
 }
 
 function getAvailableDeviceTypes() {
 	return availableOscillatos.concat(availableEffects)
 }
-
-addTapOutHandler()
-oscilloscope.appendToView(oscilloscopeContainer);
-updateMainVolumeSliderFromModel();
-addOscillator();
-//addConnection();
-setTab(0);
-updateOscilloscope();
 
 const availableDeviceTypes = getAvailableDeviceTypes()
 const devicesDropdown = document.getElementsByClassName("dropdown-content")[0]
@@ -1674,11 +1659,23 @@ function getNonConnectionDevices() {
 	return oscillators.concat(effects)
 }
 
+function onDeviceChanged() {
+	updateOscilloscope();
+}
+
+addTapOutHandler()
+oscilloscope.appendToView(oscilloscopeContainer);
+updateMainVolumeSliderFromModel();
+addOscillator();
+//addConnection();
+setTab(0);
+updateOscilloscope();
+
 // Test setup
 removeOscillator(oscillators_old[0].id)
-setTab(1)
+setTab(0)
 addDevice(Delay)
 addDevice(OscillatorProper)
-addDevice(Connection)
+//addDevice(Connection)
 
 updateOscilloscope();

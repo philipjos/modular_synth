@@ -1,4 +1,5 @@
 class Parameter extends View {
+    
     constructor(
         id,
         displayName
@@ -6,6 +7,7 @@ class Parameter extends View {
         super()
         this.id = id
         this.displayName = displayName
+        this.externalOnChange = () => {}
 
         this.setupView()
     }
@@ -18,6 +20,10 @@ class Parameter extends View {
 
     setBottomMargin(margin) {
         this.view.style.marginBottom = margin + "px"
+    }
+
+    setOnChange(value) {
+        this.externalOnChange = value
     }
 
 }

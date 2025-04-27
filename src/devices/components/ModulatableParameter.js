@@ -6,6 +6,6 @@ class ModulatableParameter extends Parameter {
     }
 
     getModulatedValue() {
-        return this.value + this.modulationDelta
+        return parseFloat(this.value) + this.modulationDelta
     }
 }

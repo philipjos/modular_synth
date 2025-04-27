@@ -14,6 +14,7 @@ class SelectionParameter extends Parameter {
         this.dropdown.addEventListener("change", (event) => {
             this.value = event.target.value;
             this.onChange();
+            this.externalOnChange();
         });
         this.view.appendChild(this.dropdown)
     }

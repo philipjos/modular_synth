@@ -6,6 +6,7 @@ class Device extends View {
         super()
 
         this.displayName = ""
+        this.onDeviceChanged = () => {}
 
         this.view.style.backgroundColor = "#CCDDDF"
         this.view.style.borderRadius = "4px"
@@ -38,6 +39,7 @@ class Device extends View {
 
     setParametersAndSetup(parameters) {
         this.parameters = parameters
+        this.updateParametersWithOnDeviceChanged()
         this.setupViewFromParameters()
     }
 
@@ -49,5 +51,17 @@ class Device extends View {
             parameter.setBottomMargin(10)
             parameter.appendToView(this.parametersView)
         }
+    }
+
+    updateParametersWithOnDeviceChanged() {
+        for (let parameterKey in this.parameters) {
+            let parameter = this.parameters[parameterKey]
+            parameter.setOnChange(this.onDeviceChanged)
+        }
+    }
+
+    setOnDeviceChanged(value) {
+        this.onDeviceChanged = value
+        this.updateParametersWithOnDeviceChanged()
     }
 }

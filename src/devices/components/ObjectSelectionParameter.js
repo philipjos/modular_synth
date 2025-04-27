@@ -11,8 +11,6 @@ class ObjectSelectionParameter extends SelectionParameter {
 
     setOptionsFromObjectsAndUpdateDropdown(objects) {
         const options = objects.map((e) => this.addObjectAndGenerateOption(e))
-        console.log("Cast options:")
-        console.log(options)
         this.setOptionsAndUpdateDropdown(options)
     }
 

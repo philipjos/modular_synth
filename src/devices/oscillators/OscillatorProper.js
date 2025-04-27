@@ -19,6 +19,6 @@ class OscillatorProper extends Oscillator {
 
     calculateOutput(t) {
         const frequency = this.parameters["frequency"].getModulatedValue()
-        return Math.sin(t * 2 * Math.PI * frequency * 1.5)
+        return Math.sin(t * 2 * Math.PI * frequency)
     }
 }
