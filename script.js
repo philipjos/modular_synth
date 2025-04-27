@@ -56,6 +56,7 @@ var dropdownStates = {}
 
 var availableOscillatos = [OscillatorProper]
 var availableEffects = [Delay]
+var availableOtherDevices = [Connection]
 
 function getUnscaledSliderValue(value) {
 	return value / 1000
@@ -332,7 +333,8 @@ function calculateBuffer(length, scale) {
 		for (let connection of connections) {
 			const parameter = connection.parameters["parameter"].getSelectedObject()
 			const lastValue = connection.parameters["from"].getSelectedObject().lastOutput
-			parameter.modulationDelta += lastValue
+			const amount =  connection.parameters["amount"].value
+			parameter.modulationDelta = parseFloat(parameter.modulationDelta) + lastValue * amount
 		}
 
         const outputDevices = getOutputDevices()
@@ -1623,7 +1625,7 @@ function updateOptionsOfConnection(connection) {
 }
 
 function getAvailableDeviceTypes() {
-	return availableOscillatos.concat(availableEffects)
+	return availableOscillatos.concat(availableEffects).concat(availableOtherDevices)
 }
 
 const availableDeviceTypes = getAvailableDeviceTypes()
@@ -1643,10 +1645,10 @@ for (let i = 0; i < availableDeviceTypes.length; i++) {
 
 function resetModulationDeltas() {
 	const nonConnectionDevices = getNonConnectionDevices()
-	for (let device in nonConnectionDevices) {
+	for (let device of nonConnectionDevices) {
 		const parameters = device.parameters
-		for (let parameter in parameters) {
-			parameter.modulationDelta = 0
+		for (let key in parameters) {
+			parameters[key].modulationDelta = 0
 		}
 	}
 }
@@ -1673,9 +1675,9 @@ updateOscilloscope();
 
 // Test setup
 removeOscillator(oscillators_old[0].id)
-setTab(0)
+setTab(1)
 addDevice(Delay)
 addDevice(OscillatorProper)
-//addDevice(Connection)
+addDevice(Connection)
 
 updateOscilloscope();

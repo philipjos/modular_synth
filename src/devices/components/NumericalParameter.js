@@ -25,16 +25,14 @@ class NumericalParameter extends ModulatableParameter {
         slider.max = (this.max ?? 1).toString();
         if(this.step == 0) {
             const range = slider.max - slider.min
-            this.step = range / 1000
+            slider.step = range / 1000
         } else {
             slider.step = this.step
         }
         slider.value = this.defaultValue;
         slider.classList.add("parameter-slider");
         slider.addEventListener("input", (event) => {
-            const sliderValue = event.target.value;
-            this.value = sliderValue /// 100 * this.
-            console.log("Setting value to:", this.value)
+            this.value = event.target.value;
             this.externalOnChange()
         })
 
