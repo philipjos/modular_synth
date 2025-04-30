@@ -6,6 +6,7 @@ class Device extends View {
         super()
 
         this.displayName = ""
+        this.timedSignals = {}
         this.onDeviceChanged = () => {}
 
         this.view.style.backgroundColor = "#CCDDDF"
@@ -63,5 +64,37 @@ class Device extends View {
     setOnDeviceChanged(value) {
         this.onDeviceChanged = value
         this.updateParametersWithOnDeviceChanged()
+    }
+
+    advanceTime() {
+        this.timedSignals["mainTime"].stepLength = this.getMainTimeFrequency()
+
+        for (let key in this.timedSignals) {
+            const timedSignal = this.timedSignals[key]
+            timedSignal.x += timedSignal.stepLength
+        }
+    }
+
+    getMainTimeFrequency() {
+        return 1
+    }
+
+    resetForCalculations() {
+        this.resetModulationDeltas()
+        this.resetTimedSignals()
+    }
+
+    resetTimedSignals() {
+        for (let key in this.timedSignals) {
+            const timedSignal = this.timedSignals[key]
+            timedSignal.reset()
+        }
+    }
+
+    resetModulationDeltas() {
+        const parameters = this.parameters
+		for (let key in parameters) {
+			parameters[key].modulationDelta = 0
+		}
     }
 }

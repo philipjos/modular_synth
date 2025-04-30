@@ -7,11 +7,7 @@ class NumericalParameter extends ModulatableParameter {
         defaultValue,
         step
     ) {
-        super(id, displayName)
-        this.min = min
-        this.max = max
-        this.defaultValue = defaultValue
-        this.value = defaultValue
+        super(id, displayName, min, max, defaultValue)
         this.step = step
 
         this.setupSubClassView()
@@ -24,8 +20,7 @@ class NumericalParameter extends ModulatableParameter {
         slider.min = (this.min ?? 0).toString();
         slider.max = (this.max ?? 1).toString();
         if(this.step == 0) {
-            const range = slider.max - slider.min
-            slider.step = range / 1000
+            slider.step = this.rangeDerivedValue / 1000
         } else {
             slider.step = this.step
         }

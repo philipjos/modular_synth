@@ -186,7 +186,14 @@ function calculateBuffer(length, scale) {
 	var mainBusLastSignal = 0
 	let outputBuffer_new = []
 
+	const nonConnectionDevices = getNonConnectionDevices()
+	for (let device of nonConnectionDevices) {
+		device.resetTimedSignals()
+		device.lastOutput = 0
+	}
+
 	for (let i = 0; i < length; i++) {
+		//console.log("calculate step")
 		let output = 0
 		let output_new = 0
 
@@ -327,26 +334,33 @@ function calculateBuffer(length, scale) {
 		mainBusLastSignal = mainBusNewSignal
 
 		outputBuffer.push(output)
-		
-		resetModulationDeltas()
+
+		for (let device of nonConnectionDevices) {
+			device.resetModulationDeltas()
+		}
  
 		for (let connection of connections) {
 			const parameter = connection.parameters["parameter"].getSelectedObject()
 			const lastValue = connection.parameters["from"].getSelectedObject().lastOutput
 			const amount =  connection.parameters["amount"].value
+			//console.log("Setting modulation")
+			//console.log(parseFloat(parameter.modulationDelta), lastValue, amount)
 			parameter.modulationDelta = parseFloat(parameter.modulationDelta) + lastValue * amount
 		}
 
-        const outputDevices = getOutputDevices()
+        for (let device of nonConnectionDevices) {
+			//console.log("debug")
+			device.advanceTime()
 
-        for (let device of outputDevices) {
-            let deviceOutput = device.calculateOutput(i / scale)
+			if (device instanceof OutputDevice) {
+				const deviceOutput = device.calculateOutput()
+				deviceOutput.lastOutput = deviceOutput
 
-			device.lastOutput = deviceOutput
+				if (device.goesToMainOutput) {
+					output_new += deviceOutput
+				}
+			}
 
-            if (device.mainOutput) {
-                output_new += deviceOutput 
-            }
         }
 		
         outputBuffer_new.push(output_new)
@@ -1601,8 +1615,6 @@ function addDevice(deviceType) {
         let nameNumber = connections_old.filter((connection) => connection.type === deviceType.typeId).length + 1;
         device.setDeviceTitle(deviceType.typeDisplayName + " " + nameNumber)
 
-        updateOptionsOfConnection(device)
-
         connections.push(device)
     } else if (device instanceof Effect) {
         device.appendToView(effectsView)
@@ -1611,6 +1623,14 @@ function addDevice(deviceType) {
 
         effects.push(device)   
     }
+
+	updateOptionsOfAllConnections()
+}
+
+function updateOptionsOfAllConnections() {
+	for (let connection of connections) {
+		updateOptionsOfConnection(connection)
+	}
 }
 
 function updateOptionsOfConnection(connection) {
@@ -1643,13 +1663,10 @@ for (let i = 0; i < availableDeviceTypes.length; i++) {
 	devicesDropdown.appendChild(effectDropdownItem)
 }
 
-function resetModulationDeltas() {
+function resetDevicesForCalculations() {
 	const nonConnectionDevices = getNonConnectionDevices()
 	for (let device of nonConnectionDevices) {
-		const parameters = device.parameters
-		for (let key in parameters) {
-			parameters[key].modulationDelta = 0
-		}
+		device.resetForCalculations()
 	}
 }
 
@@ -1676,8 +1693,8 @@ updateOscilloscope();
 // Test setup
 removeOscillator(oscillators_old[0].id)
 setTab(1)
-addDevice(Delay)
 addDevice(OscillatorProper)
-addDevice(Connection)
+//addDevice(OscillatorProper)
+//addDevice(Connection)
 
 updateOscilloscope();

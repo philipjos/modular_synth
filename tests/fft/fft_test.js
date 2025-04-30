@@ -17,5 +17,5 @@ for (let i = 0; i < signalLength; i++) {
 
 let _fft = fft(signal)
 let _loudestHarmonics = loudestHarmonicsOfFFT(_fft, sampleRate, 10)
-console.log(_loudestHarmonics)
+//console.log(_loudestHarmonics)
 

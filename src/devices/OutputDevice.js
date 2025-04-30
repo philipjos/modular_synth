@@ -2,7 +2,7 @@ class OutputDevice extends Device {
     constructor() {
         super()
         this.lastOutput = 0
-        this.mainOutput = true
+        this.goesToMainOutput = true
 
         const mainOutputSection = document.createElement("div");
         mainOutputSection.classList.add("main-output-section");
@@ -22,7 +22,7 @@ class OutputDevice extends Device {
         mainOutputSection.appendChild(mainOutputLED)
     }
 
-    calculateOutput(t) {
+    calculateOutput() {
         return 0
     }
 }
