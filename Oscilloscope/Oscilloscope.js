@@ -16,7 +16,6 @@ class Oscilloscope {
     }
 
     updateFromBuffer(buffer) {
-        console.log("Updating oscilloscope from buffer", buffer)
         this.element.innerHTML = ""
         
         let xShrink = buffer.length / this.oscilloscopeWidth

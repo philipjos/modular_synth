@@ -42,6 +42,9 @@ var connectionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
 // Distortion
 var distortionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
 
+var delayTimeScalableParameterType = new ScalableParameter(0.5, 0, 1000)
+var delayFeedbackScalableParameterType = new ScalableParameter(0.5, 0, 1)
+
 const oscilloscope = new Oscilloscope(oscilloscopeWidth, oscilloscopeHeight)
 const oscilloscopeContainer = document.getElementById("oscilloscope-container")
 
@@ -133,6 +136,17 @@ const modulatableParametersForType = (type) => {
 				title: "Amount",
 			}
 		]
+	} else if (type == "delay") {
+		return [
+			{
+				name: "time",
+				title: "Time",
+			},
+			{
+				name: "feedback",
+				title: "Feedback",
+			}
+		]
 	}
 }
 				
@@ -143,6 +157,10 @@ function calculateBuffer(length, scale) {
 	for (let i = 0; i < oscillators.length; i++) {
 		oscillators[i].timedSignalX = 0
 		oscillators[i].syncTimedSignalX = 0
+	}
+
+	for (let i = 0; i < effects.length; i++) {
+		effects[i].history = []
 	}
 
 	var connectionsIndexMapped = []
@@ -304,6 +322,32 @@ function calculateBuffer(length, scale) {
 				const signal = Math.max(-clip, Math.min(clip, inputValue * scaledAmount))
 				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "previousValue", signal)
 
+				if (device.mainOutput) {
+					output += signal
+				}
+			} else if (device.type == "delay") {
+				const time = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].time))
+				const feedback = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].feedback))
+				
+				const timeScaled = delayTimeScalableParameterType.getScaledValueForValue(time)
+				const timeInSamples = timeScaled / 1000 * scale
+
+				const inputValue = modulatedDevices[deviceIndex]["inputValue"]
+
+				var signal = 0
+
+				var signalForHistory
+				if (device.history.length >= timeInSamples) {
+					const delaySignal = device.history.splice(0, 1)[0]
+					signalForHistory = inputValue + delaySignal * feedback
+					signal = delaySignal
+				} else {
+					signalForHistory = inputValue
+				}
+
+				device.history.push(signalForHistory)
+				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "previousValue", signal)
+				
 				if (device.mainOutput) {
 					output += signal
 				}
@@ -929,6 +973,130 @@ function addDistortionViewFromModel(model) {
 	updateDropDowns()
 }
 
+function addDelayViewFromModel(model) {
+	const id = model.id;
+	const name = model.name;
+	const effectsView = document.getElementById("effects");
+	const effectView = document.createElement("div");
+	effectView.classList.add("effect");
+	
+	const effectTitle = document.createElement("div");
+	effectTitle.innerHTML = name;
+	effectTitle.classList.add("device-title");
+	effectTitle.classList.add("text");
+	effectView.appendChild(effectTitle);
+
+	const timeSection = document.createElement("div");
+	timeSection.classList.add("time-section");
+	effectView.appendChild(timeSection);
+
+	const timeControl = document.createElement("input");
+	timeControl.type = "range";
+	timeControl.min = 0;
+	timeControl.max = 1000;
+	timeControl.value = sliderDefaultViewValue;
+	timeControl.classList.add("delay-time-control");
+	timeControl.addEventListener("input", (event) => {
+		const index = findEffectIndexById(id)
+		effects[index].time = getUnscaledSliderValue(event.target.value);
+		updateOscilloscope()
+	})
+
+	timeSection.appendChild(timeControl);
+
+	const feedbackSection = document.createElement("div");
+	feedbackSection.classList.add("feedback-section");
+	effectView.appendChild(feedbackSection);
+
+	const feedbackControl = document.createElement("input");
+	feedbackControl.type = "range";
+	feedbackControl.min = 0;
+	feedbackControl.max = 1000;
+	feedbackControl.value = sliderDefaultViewValue;
+	feedbackControl.classList.add("delay-feedback-control");
+	feedbackControl.addEventListener("input", (event) => {
+		const index = findEffectIndexById(id)
+		effects[index].feedback = getUnscaledSliderValue(event.target.value);
+		updateOscilloscope()
+	})
+
+	feedbackSection.appendChild(feedbackControl);
+
+	const routingSection = document.createElement("div");
+	routingSection.classList.add("routing-section");
+	effectView.appendChild(routingSection);
+
+	const mainBusSection = document.createElement("div");
+	mainBusSection.classList.add("main-bus-section");
+	/* 
+	 * Disabled for now. For this to be useful, it should disable the ordinary (bypassed) signal
+	 * and allow for reordering of effects.
+	 */
+	//routingSection.appendChild(mainBusSection);
+
+	const mainBusButton = document.createElement("div");
+	mainBusButton.innerHTML = "Main Bus";
+	mainBusButton.classList.add("main-bus-button");
+	mainBusButton.classList.add("text");
+	mainBusButton.addEventListener("click", () => {
+		const index = findEffectIndexById(id)
+		effects[index].mainBus = !effects[index].mainBus;
+		const ledViews = document.getElementsByClassName("main-bus-led")
+		const ledView = ledViews[index]
+		ledView.style.backgroundColor = effects[index].mainBus ? "#19F1FF" : "#aaaaaa"
+		updateConnectionPartyCaches()
+		updateDropDowns()
+		updateOscilloscope()
+	})
+	mainBusSection.appendChild(mainBusButton)
+
+	const mainBusLED = document.createElement("div");
+	mainBusLED.classList.add("main-bus-led");
+	mainBusSection.appendChild(mainBusLED)
+
+	const mainOutputSection = document.createElement("div");
+	mainOutputSection.classList.add("main-output-section");
+
+	const mainOutputButton = document.createElement("div");
+	mainOutputButton.innerHTML = "Main Output";
+	mainOutputButton.classList.add("main-output-button");
+	mainOutputButton.classList.add("text");
+	mainOutputButton.addEventListener("click", () => {
+		const index = findEffectIndexById(id)
+		effects[index].mainOutput = !effects[index].mainOutput;
+		const ledViews = document.getElementsByClassName("effects-main-output-led")
+		const ledView = ledViews[index]
+		ledView.style.backgroundColor = effects[index].mainOutput ? "#19F1FF" : "#aaaaaa"
+		updateOscilloscope()
+	})
+	mainOutputSection.appendChild(mainOutputButton)
+
+	const mainOutputLED = document.createElement("div");
+	mainOutputLED.classList.add("effects-main-output-led");
+	mainOutputSection.appendChild(mainOutputLED)
+
+	routingSection.appendChild(mainOutputSection)
+
+	const deleteButton = document.createElement("div");
+	deleteButton.innerHTML = "x";
+	deleteButton.classList.add("delete-button");
+	deleteButton.addEventListener("click", () => {
+		const index = findEffectIndexById(id)
+		effectsView.removeChild(effectView)
+		effects.splice(index, 1)
+		updateConnectionPartyCaches()
+		updateConnectionsFromRemovingDeviceWithId(id)
+		updateDropDowns()
+		updateOscilloscope()
+	})
+	effectView.appendChild(deleteButton)
+
+	effectsView.appendChild(effectView);
+
+	updateConnectionPartyCaches()
+	updateDropDowns()
+}
+
 function addDistortion() {
 	let id = generateNewDeviceId();
 	let nameNumber = effects.filter((effect) => effect.type === "distortion").length + 1;
@@ -947,6 +1115,29 @@ function addDistortion() {
 	effects.push(effectModel)
 
 	addDistortionViewFromModel(effectModel)
+}
+
+
+function addDelay() {
+	let id = generateNewDeviceId();
+	let nameNumber = effects.filter((effect) => effect.type === "delay").length + 1;
+	let name = "Delay " + nameNumber;
+	let sliderDefaultViewValue = 500
+	let effectModel = {
+		id: id,
+		type: "delay",
+		name: name,
+		time: getUnscaledSliderValue(sliderDefaultViewValue),
+		feedback: getUnscaledSliderValue(sliderDefaultViewValue),
+		history: [],
+		mainBus: false,
+		mainOutput: true,
+		inputValue: 0,
+		previousValue: 0
+	}
+	effects.push(effectModel)
+
+	addDelayViewFromModel(effectModel)
 }
 
 function findConnectionIndexById(id) {
@@ -1094,6 +1285,9 @@ function updateParameterDropDown(i) {
 	} else if (destination.type == "distortion") {
 		modulatableParameters = ["inputValue", "amount"]
 		titles = ["Input", "Amount"]
+	} else if (destination.type == "delay") {
+		modulatableParameters = ["inputValue", "time", "feedback"]
+		titles = ["Input", "Time", "Feedback"]
 	}
 
 	for (let i = 0; i < modulatableParameters.length; i++) {
@@ -1127,6 +1321,11 @@ function onAddNoiseClicked() {
 
 function onAddDistortionClicked() {
 	addDistortion()
+	updateOscilloscope()
+}
+
+function onAddDelayClicked() {
+	addDelay()
 	updateOscilloscope()
 }
 
@@ -1229,6 +1428,16 @@ function updateControlViews() {
 			const amountInput = effectView.getElementsByTagName("input")[0]
 			
 			amountInput.value = distortionAmountScalableParameterType.getSliderForUnscaledValue(effect.amount)
+
+			const mainOutputLED = effectView.getElementsByClassName("effects-main-output-led")[0]
+			mainOutputLED.style.backgroundColor = effect.mainOutput ? "#19F1FF" : "#aaaaaa"
+		} else if (effect.type == "delay") {
+			const effectView = document.getElementsByClassName("effect")[i]
+			const timeInput = effectView.getElementsByTagName("input")[0]
+			const feedbackInput = effectView.getElementsByTagName("input")[1]
+			
+			timeInput.value = delayTimeScalableParameterType.getSliderForUnscaledValue(effect.time)
+			feedbackInput.value = delayTimeScalableParameterType.getSliderForUnscaledValue(effect.feedback)
 
 			const mainOutputLED = effectView.getElementsByClassName("effects-main-output-led")[0]
 			mainOutputLED.style.backgroundColor = effect.mainOutput ? "#19F1FF" : "#aaaaaa"
@@ -1343,8 +1552,8 @@ function onRandomPresetClicked () {
 
 	var presetEffects = []
 	var effectsDone = false
-	var effectTypes = ["distortion"]
-	var effectTypeTitles = ["Distortion"]
+	var effectTypes = ["distortion", "delay"]
+	var effectTypeTitles = ["Distortion", "Delay"]
 	var effectCountForType = {}
 	while (!effectsDone && presetEffects.length < safeLimit) {
 		const typeIndex = Math.min(effectTypes.length - 1, Math.floor((Math.random() * effectTypes.length)))
@@ -1460,6 +1669,8 @@ const setSynthFromPresetObject = (presetObject) => {
 	for (let i = 0; i < effects.length; i++) {
 		if (effects[i].type == "distortion") {
 			addDistortionViewFromModel(effects[i])
+		} else if (effects[i].type == "delay") {
+			addDelayViewFromModel(effects[i])
 		}
 	}
 
