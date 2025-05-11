@@ -342,9 +342,9 @@ function calculateBuffer(length, scale) {
 		for (let connection of connections) {
 			const parameter = connection.parameters["parameter"].getSelectedObject()
 			const lastValue = connection.parameters["from"].getSelectedObject().lastOutput
-			const amount =  connection.parameters["amount"].value
-			//console.log("Setting modulation")
-			//console.log(parseFloat(parameter.modulationDelta), lastValue, amount)
+			const amount = parseFloat(connection.parameters["amount"].value)
+			console.log("Setting modulation")
+			console.log(parseFloat(parameter.modulationDelta), lastValue, amount)
 			parameter.modulationDelta = parseFloat(parameter.modulationDelta) + lastValue * amount
 		}
 
@@ -354,7 +354,7 @@ function calculateBuffer(length, scale) {
 
 			if (device instanceof OutputDevice) {
 				const deviceOutput = device.calculateOutput()
-				deviceOutput.lastOutput = deviceOutput
+				device.lastOutput = deviceOutput
 
 				if (device.goesToMainOutput) {
 					output_new += deviceOutput
