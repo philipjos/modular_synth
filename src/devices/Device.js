@@ -66,8 +66,8 @@ class Device extends View {
         this.updateParametersWithOnDeviceChanged()
     }
 
-    advanceTime() {
-        this.timedSignals["mainTime"].stepLength = this.getMainTimeFrequency()
+    advanceTime(sampleRate) {
+        this.timedSignals["mainTime"].stepLength = this.getMainTimeFrequency() / sampleRate
 
         for (let key in this.timedSignals) {
             const timedSignal = this.timedSignals[key]

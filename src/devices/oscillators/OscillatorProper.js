@@ -18,8 +18,6 @@ class OscillatorProper extends Oscillator {
     }
 
     calculateOutput() {
-        //console.log()
-        //console.log(this.timedSignals["mainTime"].x * 2 * Math.PI, this.timedSignals["mainTime"].x)
         return Math.sin(this.timedSignals["mainTime"].x * 2 * Math.PI)
     }
 

@@ -350,7 +350,7 @@ function calculateBuffer(length, scale) {
 
         for (let device of nonConnectionDevices) {
 			//console.log("debug")
-			device.advanceTime()
+			device.advanceTime(scale)
 
 			if (device instanceof OutputDevice) {
 				const deviceOutput = device.calculateOutput()
@@ -362,7 +362,6 @@ function calculateBuffer(length, scale) {
 			}
 
         }
-		
         outputBuffer_new.push(output_new)
 	}
 
@@ -1596,6 +1595,7 @@ function addTapOutHandler() {
 
 function onAddDeviceClicked(deviceType) {
 	addDevice(deviceType)
+	updateOscilloscope()
 }
 
 function addDevice(deviceType) {
