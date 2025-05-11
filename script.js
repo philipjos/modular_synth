@@ -42,8 +42,15 @@ var connectionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
 // Distortion
 var distortionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
 
-var delayTimeScalableParameterType = new ScalableParameter(0.5, 0, 1000)
+var delayTimeScalableParameterType = new ScalableParameter(0.5, 1, 1000)
 var delayFeedbackScalableParameterType = new ScalableParameter(0.5, 0, 1)
+
+var compressorThresholdScalableParameterType = new ScalableParameter(0.5, 0, 1)
+var compressorRatioScalableParameterType = new ScalableParameter(2, 1, 10)
+var compressorAttackScalableParameterType = new ScalableParameter(50, 0, 500)
+var compressorReleaseScalableParameterType = new ScalableParameter(50, 0, 2000)
+
+const compressorMinimumFrequency = 20
 
 const oscilloscope = new Oscilloscope(oscilloscopeWidth, oscilloscopeHeight)
 const oscilloscopeContainer = document.getElementById("oscilloscope-container")
@@ -147,6 +154,25 @@ const modulatableParametersForType = (type) => {
 				title: "Feedback",
 			}
 		]
+	} else if (type == "compressor") {
+		return [
+			{
+				name: "threshold",
+				title: "Threshold",
+			},
+			{
+				name: "ratio",
+				title: "Ratio",
+			},
+			{
+				name: "attack",
+				title: "Attack",
+			},
+			{
+				name: "release",
+				title: "Release",
+			}
+		]
 	}
 }
 				
@@ -162,6 +188,8 @@ function calculateBuffer(length, scale) {
 	for (let i = 0; i < effects.length; i++) {
 		effects[i].history = []
 	}
+
+	resetDevicesForBufferCalculation()
 
 	var connectionsIndexMapped = []
 	for (let i = 0; i < connections.length; i++) {
@@ -351,6 +379,93 @@ function calculateBuffer(length, scale) {
 				if (device.mainOutput) {
 					output += signal
 				}
+			} else if (device.type == "compressor") {
+				const threshold = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].threshold))
+				const ratio = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].ratio))
+				const attack = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].attack))
+				const release = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].release))
+
+				const thresholdScaled = compressorThresholdScalableParameterType.getScaledValueForValue(threshold)
+				const ratioScaled = compressorRatioScalableParameterType.getScaledValueForValue(ratio)
+				const attackScaled = compressorAttackScalableParameterType.getScaledValueForValue(attack)
+				const releaseScaled = compressorReleaseScalableParameterType.getScaledValueForValue(release)
+				const attackInSeconds = attackScaled / 1000
+				const releaseInSeconds = releaseScaled / 1000
+				const attackInSamples = attackInSeconds * scale
+				const releaseInSamples = releaseInSeconds * scale
+				const envelopeInSamples = attackInSamples + releaseInSamples
+
+				const inputValue = modulatedDevices[deviceIndex]["inputValue"]
+				
+				var maxValue = 0
+				var maxValueIndex = 0
+				var minValue = 0
+				var minValueIndex = 0
+
+				const maxPeriodInSamples = scale / compressorMinimumFrequency
+
+				for (let j = 0; j < device.history.length; j++) {
+					if (device.history[j] > maxValue) {
+						maxValue = device.history[j]
+						maxValueIndex = j
+					}	
+					if (device.history[j] < minValue) {
+						minValue = device.history[j]
+						minValueIndex = j
+					}
+				}
+
+
+				const amplitude = Math.abs(maxValue - minValue) / 2
+				
+				var signal = inputValue
+				if (amplitude > 0) {
+					if (amplitude > thresholdScaled) {
+						const historyIndexOfTriggeringPeriodEnd = Math.max(maxValueIndex, minValueIndex)
+						const samplesSinceTriggeringPeriodEnd = device.history.length - historyIndexOfTriggeringPeriodEnd
+
+						const sampleIndex = i - samplesSinceTriggeringPeriodEnd
+						if (!device.triggered) {
+							device.firstConsecutiveTriggerSampleIndex = sampleIndex
+							device.triggered = true
+						}
+
+						device.triggeredSampleIndex = sampleIndex
+					}
+
+					if (device.triggered) {
+						const samplesSinceTrigger = i - device.triggeredSampleIndex
+						const sampleSinceFirstConsecutiveTrigger = i - device.firstConsecutiveTriggerSampleIndex
+						
+						if (samplesSinceTrigger >= envelopeInSamples) {
+							device.triggered = false
+						} else {
+							var envelopeValuePercentage
+							if (sampleSinceFirstConsecutiveTrigger < attackInSamples) {
+								envelopeValuePercentage = sampleSinceFirstConsecutiveTrigger / attackInSamples
+							} else {
+								envelopeValuePercentage = 1 - Math.max(0, (samplesSinceTrigger - attackInSamples)) / releaseInSamples
+							}
+
+							const ratioWithEnvelope = 1 + (ratioScaled - 1) * envelopeValuePercentage
+							const gainToAddAboveThreshold = (amplitude - thresholdScaled) / ratioWithEnvelope
+							const newAmplitude = thresholdScaled + gainToAddAboveThreshold
+							const gain = newAmplitude / amplitude
+							signal *= gain
+						}
+					}
+				}
+				
+				device.history.push(signal)
+				if (device.history.length > maxPeriodInSamples) {
+					device.history.splice(0, 1)
+				}
+
+				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "previousValue", signal)
+
+				if (device.mainOutput) {
+					output += signal
+				}
 			}
 		}
 
@@ -429,6 +544,16 @@ function play() {
 	source.connect(audioCtx.destination);
 
 	source.start(audioCtx.currentTime);
+}
+
+function resetDevicesForBufferCalculation() {
+	for (let i = 0; i < effects.length; i++) {
+		if (effects[i].type == "compressor") {
+			effects[i].triggered = false
+			effects[i].triggeredSampleIndex = 0
+			effects[i].firstConsecutiveTriggerSampleIndex = 0
+		}
+	}
 }
 
 function addOscillatorViewFromModel(model) {
@@ -710,6 +835,7 @@ function addConnectionViewFromModel(model) {
 	destinationSelector.addEventListener("input", (event) => {
 		const index = findConnectionIndexById(id)
 		connections[index].destination = event.target.value
+		console.log("destinationSelector", event.target.value)
 		updateParameterDropDown(index)
 		updateOscilloscope()
 	})
@@ -990,6 +1116,12 @@ function addDelayViewFromModel(model) {
 	timeSection.classList.add("time-section");
 	effectView.appendChild(timeSection);
 
+	const timeLabel = document.createElement("div");
+	timeLabel.innerHTML = "Time";
+	timeLabel.classList.add("time-label");
+	timeLabel.classList.add("text");
+	timeSection.appendChild(timeLabel);
+
 	const timeControl = document.createElement("input");
 	timeControl.type = "range";
 	timeControl.min = 0;
@@ -1007,6 +1139,12 @@ function addDelayViewFromModel(model) {
 	const feedbackSection = document.createElement("div");
 	feedbackSection.classList.add("feedback-section");
 	effectView.appendChild(feedbackSection);
+
+	const feedbackLabel = document.createElement("div");
+	feedbackLabel.innerHTML = "Feedback";
+	feedbackLabel.classList.add("feedback-label");
+	feedbackLabel.classList.add("text");
+	feedbackSection.appendChild(feedbackLabel);
 
 	const feedbackControl = document.createElement("input");
 	feedbackControl.type = "range";
@@ -1097,6 +1235,188 @@ function addDelayViewFromModel(model) {
 	updateDropDowns()
 }
 
+function addCompressorViewFromModel(model) {
+	const id = model.id;
+	const name = model.name;
+	const effectsView = document.getElementById("effects");
+	const effectView = document.createElement("div");
+	effectView.classList.add("effect");
+
+	const effectTitle = document.createElement("div");
+	effectTitle.innerHTML = name;
+	effectTitle.classList.add("device-title");
+	effectTitle.classList.add("text");
+	effectView.appendChild(effectTitle);
+	
+	const thresholdSection = document.createElement("div");
+	thresholdSection.classList.add("threshold-section");
+	effectView.appendChild(thresholdSection);
+
+	const thresholdLabel = document.createElement("div");
+	thresholdLabel.innerHTML = "Threshold";
+	thresholdLabel.classList.add("threshold-label");
+	thresholdLabel.classList.add("text");
+	thresholdSection.appendChild(thresholdLabel);
+
+	const thresholdControl = document.createElement("input");
+	thresholdControl.type = "range";
+	thresholdControl.min = 0;
+	thresholdControl.max = 1000;
+	thresholdControl.value = sliderDefaultViewValue;
+	thresholdControl.classList.add("compressor-threshold-control");
+	thresholdControl.addEventListener("input", (event) => {
+		const index = findEffectIndexById(id)
+		effects[index].threshold = getUnscaledSliderValue(event.target.value);
+		updateOscilloscope()
+	})
+
+	thresholdSection.appendChild(thresholdControl);
+
+	const ratioSection = document.createElement("div");
+	ratioSection.classList.add("ratio-section");
+	effectView.appendChild(ratioSection);
+
+	const ratioLabel = document.createElement("div");
+	ratioLabel.innerHTML = "Ratio";
+	ratioLabel.classList.add("ratio-label");
+	ratioLabel.classList.add("text");
+	ratioSection.appendChild(ratioLabel);
+
+	const ratioControl = document.createElement("input");
+	ratioControl.type = "range";
+	ratioControl.min = 0;
+	ratioControl.max = 1000;
+	ratioControl.value = sliderDefaultViewValue;
+	ratioControl.classList.add("compressor-ratio-control");
+	ratioControl.addEventListener("input", (event) => {
+		const index = findEffectIndexById(id)
+		effects[index].ratio = getUnscaledSliderValue(event.target.value);
+		updateOscilloscope()
+	})
+	ratioSection.appendChild(ratioControl);
+
+	const attackSection = document.createElement("div");
+	attackSection.classList.add("attack-section");
+	effectView.appendChild(attackSection);
+
+	const attackLabel = document.createElement("div");
+	attackLabel.innerHTML = "Attack";
+	attackLabel.classList.add("attack-label");
+	attackLabel.classList.add("text");
+	attackSection.appendChild(attackLabel);
+
+	const attackControl = document.createElement("input");
+	attackControl.type = "range";
+	attackControl.min = 0;
+	attackControl.max = 1000;
+	attackControl.value = sliderDefaultViewValue;
+	attackControl.classList.add("compressor-attack-control");
+	attackControl.addEventListener("input", (event) => {
+		const index = findEffectIndexById(id)
+		effects[index].attack = getUnscaledSliderValue(event.target.value);
+		updateOscilloscope()
+	})
+	attackSection.appendChild(attackControl);
+
+	const releaseSection = document.createElement("div");
+	releaseSection.classList.add("release-section");
+	effectView.appendChild(releaseSection);
+
+	const releaseLabel = document.createElement("div");
+	releaseLabel.innerHTML = "Release";
+	releaseLabel.classList.add("release-label");
+	releaseLabel.classList.add("text");
+	releaseSection.appendChild(releaseLabel);
+
+	const releaseControl = document.createElement("input");
+	releaseControl.type = "range";
+	releaseControl.min = 0;
+	releaseControl.max = 1000;
+	releaseControl.value = sliderDefaultViewValue;
+	releaseControl.classList.add("compressor-release-control");
+	releaseControl.addEventListener("input", (event) => {
+		const index = findEffectIndexById(id)
+		effects[index].release = getUnscaledSliderValue(event.target.value);
+		updateOscilloscope()
+	})
+	releaseSection.appendChild(releaseControl);
+
+	const routingSection = document.createElement("div");
+	routingSection.classList.add("routing-section");
+	effectView.appendChild(routingSection);
+
+	const mainBusSection = document.createElement("div");
+	mainBusSection.classList.add("main-bus-section");
+	/* 
+	 * Disabled for now. For this to be useful, it should disable the ordinary (bypassed) signal
+	 * and allow for reordering of effects.
+	 */
+
+	const mainBusButton = document.createElement("div");
+	mainBusButton.innerHTML = "Main Bus";
+	mainBusButton.classList.add("main-bus-button");
+	mainBusButton.classList.add("text");
+	mainBusButton.addEventListener("click", () => {
+		const index = findEffectIndexById(id)
+		effects[index].mainBus = !effects[index].mainBus;
+		const ledViews = document.getElementsByClassName("main-bus-led")
+		const ledView = ledViews[index]
+		ledView.style.backgroundColor = effects[index].mainBus ? "#19F1FF" : "#aaaaaa"
+		updateConnectionPartyCaches()
+		updateDropDowns()
+		updateOscilloscope()
+	})
+	
+	mainBusSection.appendChild(mainBusButton)
+
+	const mainBusLED = document.createElement("div");
+	mainBusLED.classList.add("main-bus-led");
+	mainBusSection.appendChild(mainBusLED)
+
+	const mainOutputSection = document.createElement("div");
+	mainOutputSection.classList.add("main-output-section");
+	effectView.appendChild(mainOutputSection);
+
+	const mainOutputButton = document.createElement("div");
+	mainOutputButton.innerHTML = "Main Output";
+	mainOutputButton.classList.add("main-output-button");
+	mainOutputButton.classList.add("text");
+	mainOutputButton.addEventListener("click", () => {
+		const index = findEffectIndexById(id)
+		effects[index].mainOutput = !effects[index].mainOutput;
+		const ledViews = document.getElementsByClassName("effects-main-output-led")
+		const ledView = ledViews[index]
+		ledView.style.backgroundColor = effects[index].mainOutput ? "#19F1FF" : "#aaaaaa"
+		updateOscilloscope()
+	})
+	mainOutputSection.appendChild(mainOutputButton)
+
+	const mainOutputLED = document.createElement("div");
+	mainOutputLED.classList.add("effects-main-output-led");
+	mainOutputSection.appendChild(mainOutputLED)
+
+	routingSection.appendChild(mainOutputSection)
+
+	const deleteButton = document.createElement("div");
+	deleteButton.innerHTML = "x";
+	deleteButton.classList.add("delete-button");
+	deleteButton.addEventListener("click", () => {
+		const index = findEffectIndexById(id)	
+		effectsView.removeChild(effectView)
+		effects.splice(index, 1)
+		updateConnectionPartyCaches()
+		updateConnectionsFromRemovingDeviceWithId(id)
+		updateDropDowns()
+		updateOscilloscope()
+	})
+	effectView.appendChild(deleteButton)
+
+	effectsView.appendChild(effectView);
+
+	updateConnectionPartyCaches()
+	updateDropDowns()
+}
+
 function addDistortion() {
 	let id = generateNewDeviceId();
 	let nameNumber = effects.filter((effect) => effect.type === "distortion").length + 1;
@@ -1138,6 +1458,33 @@ function addDelay() {
 	effects.push(effectModel)
 
 	addDelayViewFromModel(effectModel)
+}
+
+function addCompressor() {
+	let id = generateNewDeviceId();
+	let nameNumber = effects.filter((effect) => effect.type === "compressor").length + 1;
+	let name = "Compressor " + nameNumber;
+	let sliderDefaultViewValue = 500	
+	let effectModel = {
+		id: id,
+		type: "compressor",
+		name: name,
+		threshold: getUnscaledSliderValue(sliderDefaultViewValue),
+		ratio: getUnscaledSliderValue(sliderDefaultViewValue),
+		attack: getUnscaledSliderValue(sliderDefaultViewValue),
+		release: getUnscaledSliderValue(sliderDefaultViewValue),
+		mainBus: false,
+		mainOutput: true,
+		inputValue: 0,
+		previousValue: 0,
+		history: [],
+		triggered: false,
+		triggeredSampleIndex: 0,
+		firstConsecutiveTriggerSampleIndex: 0
+	}
+	effects.push(effectModel)
+
+	addCompressorViewFromModel(effectModel)
 }
 
 function findConnectionIndexById(id) {
@@ -1288,6 +1635,9 @@ function updateParameterDropDown(i) {
 	} else if (destination.type == "delay") {
 		modulatableParameters = ["inputValue", "time", "feedback"]
 		titles = ["Input", "Time", "Feedback"]
+	} else if (destination.type == "compressor") {
+		modulatableParameters = ["inputValue", "threshold", "ratio", "attack", "release"]
+		titles = ["Input", "Threshold", "Ratio", "Attack", "Release"]
 	}
 
 	for (let i = 0; i < modulatableParameters.length; i++) {
@@ -1326,6 +1676,11 @@ function onAddDistortionClicked() {
 
 function onAddDelayClicked() {
 	addDelay()
+	updateOscilloscope()
+}
+
+function onAddCompressorClicked() {
+	addCompressor()
 	updateOscilloscope()
 }
 
@@ -1441,6 +1796,20 @@ function updateControlViews() {
 
 			const mainOutputLED = effectView.getElementsByClassName("effects-main-output-led")[0]
 			mainOutputLED.style.backgroundColor = effect.mainOutput ? "#19F1FF" : "#aaaaaa"
+		} else if (effect.type == "compressor") {
+			const effectView = document.getElementsByClassName("effect")[i]
+			const thresholdInput = effectView.getElementsByTagName("input")[0]
+			const ratioInput = effectView.getElementsByTagName("input")[1]
+			const attackInput = effectView.getElementsByTagName("input")[2]
+			const releaseInput = effectView.getElementsByTagName("input")[3]	
+			
+			thresholdInput.value = compressorThresholdScalableParameterType.getSliderForUnscaledValue(effect.threshold)
+			ratioInput.value = compressorRatioScalableParameterType.getSliderForUnscaledValue(effect.ratio)
+			attackInput.value = compressorAttackScalableParameterType.getSliderForUnscaledValue(effect.attack)
+			releaseInput.value = compressorReleaseScalableParameterType.getSliderForUnscaledValue(effect.release)
+
+			const mainOutputLED = effectView.getElementsByClassName("effects-main-output-led")[0]
+			mainOutputLED.style.backgroundColor = effect.mainOutput ? "#19F1FF" : "#aaaaaa"
 		}
 	}
 }
@@ -1552,8 +1921,8 @@ function onRandomPresetClicked () {
 
 	var presetEffects = []
 	var effectsDone = false
-	var effectTypes = ["distortion", "delay"]
-	var effectTypeTitles = ["Distortion", "Delay"]
+	var effectTypes = ["distortion", "delay", "compressor"]
+	var effectTypeTitles = ["Distortion", "Delay", "Compressor"]
 	var effectCountForType = {}
 	while (!effectsDone && presetEffects.length < safeLimit) {
 		const typeIndex = Math.min(effectTypes.length - 1, Math.floor((Math.random() * effectTypes.length)))
@@ -1566,16 +1935,45 @@ function onRandomPresetClicked () {
 		const nameNumber = count + 1
 		const name = typeTitle + " " + nameNumber
 
-		var effect = {
-			id: nextDeviceId,
-			type: type,
-			name: name,
-			amount: Math.random(),
-			mainBus: Math.random() >= 0.5,
-			mainOutput: Math.random() >= 0.5,
-			inputValue: 0,
-			previousValue: 0
+		var effect = {}
+
+		if (type == "distortion") {
+			effect = {
+				id: nextDeviceId,
+				type: type,
+				name: name,
+				amount: Math.random(),
+				mainBus: Math.random() >= 0.5,
+				mainOutput: Math.random() >= 0.5,
+				inputValue: 0,
+				previousValue: 0
+			}
+		} else if (type == "delay") {
+			effect = {
+				id: nextDeviceId,
+				type: type,
+				name: name,
+				time: Math.random(),
+				feedback: Math.random(),
+				mainBus: Math.random() >= 0.5,
+				mainOutput: Math.random() >= 0.5,
+				inputValue: 0,
+				previousValue: 0
+			}
+		} else if (type == "compressor") {
+			effect = {
+				id: nextDeviceId,
+				type: type,
+				name: name,
+				threshold: Math.random(),
+				ratio: Math.random(),
+				attack: Math.random(),
+				release: Math.random(),
+				inputValue: 0,
+				previousValue: 0
+			}
 		}
+
 		presetEffects.push(effect)
 		effectCountForType[type] += 1
 		nextDeviceId += 1
@@ -1671,6 +2069,8 @@ const setSynthFromPresetObject = (presetObject) => {
 			addDistortionViewFromModel(effects[i])
 		} else if (effects[i].type == "delay") {
 			addDelayViewFromModel(effects[i])
+		} else if (effects[i].type == "compressor") {
+			addCompressorViewFromModel(effects[i])
 		}
 	}
 
