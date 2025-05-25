@@ -492,8 +492,10 @@ function calculateBuffer(length, scale) {
 				const fullRange = 2
 				const resolution = Math.pow(2, bitDepthScaled)
 				const quantum = fullRange / (resolution - 1)
-				const rounded = Math.round(inputValue / quantum) * quantum
-				const bitCrushed = Math.min(1, Math.max(-1, rounded))
+				const unipolar = inputValue + 1
+				const rounded = Math.round(unipolar / quantum) * quantum
+				const bipolar = rounded - 1
+				const bitCrushed = Math.min(1, Math.max(-1, bipolar))
 
 				var signal = 0
 				const timeQuantum = scale / sampleRateScaled
