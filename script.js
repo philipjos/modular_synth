@@ -43,6 +43,7 @@ var connectionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
 var distortionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
 
 var bitCrusherBitDepthScalableParameterType = new ScalableParameter(8, 1, 16)
+var bitCrusherSampleRateScalableParameterType = new ScalableParameter(1000, 1, 44100)
 
 var delayTimeScalableParameterType = new ScalableParameter(0.5, 1, 1000)
 var delayFeedbackScalableParameterType = new ScalableParameter(0.5, 0, 1)
@@ -180,6 +181,10 @@ const modulatableParametersForType = (type) => {
 			{
 				name: "bitDepth",
 				title: "Bit depth",
+			},
+			{
+				name: "sampleRate",
+				title: "Sample rate",
 			}
 		]
 	}
@@ -477,8 +482,10 @@ function calculateBuffer(length, scale) {
 				}
 			} else if (device.type == "bitCrusher") {
 				const bitDepth = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].bitDepth))
+				const sampleRate = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].sampleRate))
 
 				const bitDepthScaled = bitCrusherBitDepthScalableParameterType.getScaledValueForValue(bitDepth)
+				const sampleRateScaled = bitCrusherSampleRateScalableParameterType.getScaledValueForValue(sampleRate)
 
 				const inputValue = modulatedDevices[deviceIndex]["inputValue"]
 
@@ -486,7 +493,20 @@ function calculateBuffer(length, scale) {
 				const resolution = Math.pow(2, bitDepthScaled)
 				const quantum = fullRange / (resolution - 1)
 				const rounded = Math.round(inputValue / quantum) * quantum
-				var signal = Math.min(1, Math.max(-1, rounded))
+				const bitCrushed = Math.min(1, Math.max(-1, rounded))
+
+				var signal = 0
+				const timeQuantum = scale / sampleRateScaled
+				var timedSignalX = device.timedSignalX
+				if (timedSignalX >= timeQuantum) {
+					timedSignalX = 0
+					signal = bitCrushed
+				} else {
+					signal = device.previousValue
+				}
+
+				timedSignalX += 1
+				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "timedSignalX", timedSignalX)
 
 				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "previousValue", signal)
 
@@ -1480,6 +1500,29 @@ function addBitCrusherViewFromModel(model) {
 	})
 	bitDepthSection.appendChild(bitDepthControl);
 
+	const sampleRateSection = document.createElement("div");
+	sampleRateSection.classList.add("sample-rate-section");
+	effectView.appendChild(sampleRateSection);
+	
+	const sampleRateLabel = document.createElement("div");
+	sampleRateLabel.innerHTML = "Sample rate";
+	sampleRateLabel.classList.add("sample-rate-label");
+	sampleRateLabel.classList.add("text");
+	sampleRateSection.appendChild(sampleRateLabel);
+	
+	const sampleRateControl = document.createElement("input");
+	sampleRateControl.type = "range";
+	sampleRateControl.min = 0;
+	sampleRateControl.max = 1000;
+	sampleRateControl.value = sliderDefaultViewValue;
+	sampleRateControl.classList.add("bit-crusher-sample-rate-control");
+	sampleRateControl.addEventListener("input", (event) => {
+		const index = findEffectIndexById(id)
+		effects[index].sampleRate = getUnscaledSliderValue(event.target.value);
+		updateOscilloscope()
+	})
+	sampleRateSection.appendChild(sampleRateControl);
+
 	const routingSection = document.createElement("div");
 	routingSection.classList.add("routing-section");
 	effectView.appendChild(routingSection);
@@ -1632,8 +1675,10 @@ function addBitCrusher() {
 		type: "bitCrusher",
 		name: name,
 		bitDepth: getUnscaledSliderValue(sliderDefaultViewValue),
+		sampleRate: getUnscaledSliderValue(sliderDefaultViewValue),
 		mainBus: false,
 		mainOutput: true,
+		timedSignalX: 0,
 		inputValue: 0,
 		previousValue: 0
 	}
@@ -1794,8 +1839,8 @@ function updateParameterDropDown(i) {
 		modulatableParameters = ["inputValue", "threshold", "ratio", "attack", "release"]
 		titles = ["Input", "Threshold", "Ratio", "Attack", "Release"]
 	} else if (destination.type == "bitCrusher") {
-		modulatableParameters = ["inputValue", "bitDepth"]
-		titles = ["Input", "Bit depth"]
+		modulatableParameters = ["inputValue", "bitDepth", "sampleRate"]
+		titles = ["Input", "Bit depth", "Sample rate"]
 	}
 
 	for (let i = 0; i < modulatableParameters.length; i++) {
@@ -1976,8 +2021,10 @@ function updateControlViews() {
 		} else if (effect.type == "bitCrusher") {
 			const effectView = document.getElementsByClassName("effect")[i]
 			const bitDepthInput = effectView.getElementsByTagName("input")[0]
+			const sampleRateInput = effectView.getElementsByTagName("input")[1]
 			
 			bitDepthInput.value = bitCrusherBitDepthScalableParameterType.getSliderForUnscaledValue(effect.bitDepth)
+			sampleRateInput.value = bitCrusherSampleRateScalableParameterType.getSliderForUnscaledValue(effect.sampleRate)
 
 			const mainOutputLED = effectView.getElementsByClassName("effects-main-output-led")[0]
 			mainOutputLED.style.backgroundColor = effect.mainOutput ? "#19F1FF" : "#aaaaaa"
@@ -2152,6 +2199,7 @@ function onRandomPresetClicked () {
 				type: type,
 				name: name,
 				bitDepth: Math.random(),
+				sampleRate: Math.random(),
 				mainBus: Math.random() >= 0.5,
 				mainOutput: Math.random() >= 0.5,
 				inputValue: 0,
