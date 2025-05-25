@@ -45,6 +45,8 @@ var distortionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
 var bitCrusherBitDepthScalableParameterType = new ScalableParameter(8, 1, 16)
 var bitCrusherSampleRateScalableParameterType = new ScalableParameter(1000, 1, 44100)
 
+var waveShaperDryWetScalableParameterType = new ScalableParameter(0.5, 0, 1)
+
 var delayTimeScalableParameterType = new ScalableParameter(0.5, 1, 1000)
 var delayFeedbackScalableParameterType = new ScalableParameter(0.5, 0, 1)
 
@@ -185,6 +187,13 @@ const modulatableParametersForType = (type) => {
 			{
 				name: "sampleRate",
 				title: "Sample rate",
+			}
+		]
+	} else if (type == "waveShaper") {
+		return [
+			{
+				name: "dryWet",
+				title: "Dry/wet",
 			}
 		]
 	}
@@ -512,6 +521,20 @@ function calculateBuffer(length, scale) {
 
 				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "previousValue", signal)
 
+				if (device.mainOutput) {
+					output += signal
+				}
+			} else if (device.type == "waveShaper") {
+				const dryWet = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].dryWet))
+				const scaledDryWet = waveShaperDryWetScalableParameterType.getScaledValueForValue(dryWet)
+	
+				const inputValue = modulatedDevices[deviceIndex]["inputValue"]
+				const waveShaped = inputValue
+	
+				const signal = inputValue * scaledDryWet + waveShaped * (1 - scaledDryWet)
+	
+				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "previousValue", signal)
+	
 				if (device.mainOutput) {
 					output += signal
 				}
@@ -1597,6 +1620,113 @@ function addBitCrusherViewFromModel(model) {
 	updateDropDowns()
 }
 
+function addWaveShaperViewFromModel(model) {
+	const id = model.id;
+	const name = model.name;
+	const effectsView = document.getElementById("effects");
+	const effectView = document.createElement("div");
+	effectView.classList.add("effect");
+
+	const effectTitle = document.createElement("div");
+	effectTitle.innerHTML = name;
+	effectTitle.classList.add("device-title");
+	effectTitle.classList.add("text");
+	effectView.appendChild(effectTitle);
+
+	const dryWetSection = document.createElement("div");
+	dryWetSection.classList.add("dry-wet-section");
+	effectView.appendChild(dryWetSection);
+
+	const dryWetLabel = document.createElement("div");
+	dryWetLabel.innerHTML = "Dry/wet";
+	dryWetLabel.classList.add("dry-wet-label");
+	dryWetLabel.classList.add("text");
+	dryWetSection.appendChild(dryWetLabel);
+
+	const dryWetControl = document.createElement("input");
+	dryWetControl.type = "range";
+	dryWetControl.min = 0;
+	dryWetControl.max = 1000;
+	dryWetControl.value = sliderDefaultViewValue;
+	dryWetControl.classList.add("wave-shaper-dry-wet-control");
+	dryWetControl.addEventListener("input", (event) => {
+		const index = findEffectIndexById(id)
+		effects[index].dryWet = getUnscaledSliderValue(event.target.value);
+		updateOscilloscope()
+	})
+	dryWetSection.appendChild(dryWetControl);
+
+	const routingSection = document.createElement("div");
+	routingSection.classList.add("routing-section");
+	effectView.appendChild(routingSection);
+
+	const mainBusSection = document.createElement("div");
+	mainBusSection.classList.add("main-bus-section");
+	
+	const mainBusButton = document.createElement("div");
+	mainBusButton.innerHTML = "Main Bus";
+	mainBusButton.classList.add("main-bus-button");
+	mainBusButton.classList.add("text");
+	mainBusButton.addEventListener("click", () => {
+		const index = findEffectIndexById(id)
+		effects[index].mainBus = !effects[index].mainBus;
+		const ledViews = document.getElementsByClassName("main-bus-led")
+		const ledView = ledViews[index]
+		ledView.style.backgroundColor = effects[index].mainBus ? "#19F1FF" : "#aaaaaa"
+		updateConnectionPartyCaches()
+		updateDropDowns()
+		updateOscilloscope()
+	})
+
+	mainBusSection.appendChild(mainBusButton)
+
+	const mainBusLED = document.createElement("div");
+	mainBusLED.classList.add("main-bus-led");
+	mainBusSection.appendChild(mainBusLED)
+
+	const mainOutputSection = document.createElement("div");
+	mainOutputSection.classList.add("main-output-section");
+	effectView.appendChild(mainOutputSection);
+
+	const mainOutputButton = document.createElement("div");
+	mainOutputButton.innerHTML = "Main Output";
+	mainOutputButton.classList.add("main-output-button");
+	mainOutputButton.classList.add("text");
+
+	mainOutputButton.addEventListener("click", () => {
+		const index = findEffectIndexById(id)
+		effects[index].mainOutput = !effects[index].mainOutput;
+		const ledViews = document.getElementsByClassName("effects-main-output-led")
+		const ledView = ledViews[index]
+		ledView.style.backgroundColor = effects[index].mainOutput ? "#19F1FF" : "#aaaaaa"
+		updateOscilloscope()
+	})
+
+	mainOutputSection.appendChild(mainOutputButton)
+
+	const mainOutputLED = document.createElement("div");
+	mainOutputLED.classList.add("effects-main-output-led");
+	mainOutputSection.appendChild(mainOutputLED)
+
+	routingSection.appendChild(mainOutputSection)
+
+	const deleteButton = document.createElement("div");
+	deleteButton.innerHTML = "x";
+	deleteButton.classList.add("delete-button");
+	deleteButton.addEventListener("click", () => {
+		const index = findEffectIndexById(id)
+		effectsView.removeChild(effectView)
+		effects.splice(index, 1)
+		updateConnectionPartyCaches()
+		updateConnectionsFromRemovingDeviceWithId(id)
+		updateDropDowns()
+		updateOscilloscope()
+	})
+	effectView.appendChild(deleteButton)
+
+	effectsView.appendChild(effectView);
+}
+
 function addDistortion() {
 	let id = generateNewDeviceId();
 	let nameNumber = effects.filter((effect) => effect.type === "distortion").length + 1;
@@ -1686,6 +1816,25 @@ function addBitCrusher() {
 	}
 	effects.push(effectModel)
 	addBitCrusherViewFromModel(effectModel)
+}
+
+function addWaveShaper() {
+	let id = generateNewDeviceId();
+	let nameNumber = effects.filter((effect) => effect.type === "waveShaper").length + 1;
+	let name = "Wave Shaper " + nameNumber;
+	let sliderDefaultViewValue = 500
+	let effectModel = {
+		id: id,
+		type: "waveShaper",
+		name: name,
+		dryWet: getUnscaledSliderValue(sliderDefaultViewValue),
+		mainBus: false,
+		mainOutput: true,
+		inputValue: 0,
+		previousValue: 0
+	}
+	effects.push(effectModel)
+	addWaveShaperViewFromModel(effectModel)
 }
 
 function findConnectionIndexById(id) {
@@ -1843,6 +1992,9 @@ function updateParameterDropDown(i) {
 	} else if (destination.type == "bitCrusher") {
 		modulatableParameters = ["inputValue", "bitDepth", "sampleRate"]
 		titles = ["Input", "Bit depth", "Sample rate"]
+	} else if (destination.type == "waveShaper") {
+		modulatableParameters = ["inputValue", "dryWet"]
+		titles = ["Input", "Dry/wet"]
 	}
 
 	for (let i = 0; i < modulatableParameters.length; i++) {
@@ -1891,6 +2043,11 @@ function onAddCompressorClicked() {
 
 function onAddBitCrusherClicked() {
 	addBitCrusher()
+	updateOscilloscope()
+}
+
+function onAddWaveShaperClicked() {
+	addWaveShaper()
 	updateOscilloscope()
 }
 
@@ -2028,6 +2185,17 @@ function updateControlViews() {
 			bitDepthInput.value = bitCrusherBitDepthScalableParameterType.getSliderForUnscaledValue(effect.bitDepth)
 			sampleRateInput.value = bitCrusherSampleRateScalableParameterType.getSliderForUnscaledValue(effect.sampleRate)
 
+			const mainOutputLED = effectView.getElementsByClassName("effects-main-output-led")[0]
+			mainOutputLED.style.backgroundColor = effect.mainOutput ? "#19F1FF" : "#aaaaaa"
+
+			const mainBusLED = effectView.getElementsByClassName("main-bus-led")[0]
+			mainBusLED.style.backgroundColor = effect.mainBus ? "#19F1FF" : "#aaaaaa"
+		} else if (effect.type == "waveShaper") {
+			const effectView = document.getElementsByClassName("effect")[i]
+			const dryWetInput = effectView.getElementsByTagName("input")[0]
+			
+			dryWetInput.value = waveShaperDryWetScalableParameterType.getSliderForUnscaledValue(effect.dryWet)
+			
 			const mainOutputLED = effectView.getElementsByClassName("effects-main-output-led")[0]
 			mainOutputLED.style.backgroundColor = effect.mainOutput ? "#19F1FF" : "#aaaaaa"
 
@@ -2207,6 +2375,17 @@ function onRandomPresetClicked () {
 				inputValue: 0,
 				previousValue: 0
 			}
+		} else if (type == "waveShaper") {
+			effect = {
+				id: nextDeviceId,
+				type: type,
+				name: name,
+				dryWet: Math.random(),
+				mainBus: Math.random() >= 0.5,
+				mainOutput: Math.random() >= 0.5,
+				inputValue: 0,
+				previousValue: 0
+			}
 		}
 
 		presetEffects.push(effect)
@@ -2308,6 +2487,8 @@ const setSynthFromPresetObject = (presetObject) => {
 			addCompressorViewFromModel(effects[i])
 		} else if (effects[i].type == "bitCrusher") {
 			addBitCrusherViewFromModel(effects[i])
+		} else if (effects[i].type == "waveShaper") {
+			addWaveShaperViewFromModel(effects[i])
 		}
 	}
 
