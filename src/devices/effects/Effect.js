@@ -5,4 +5,6 @@ class Effect extends OutputDevice {
     constructor() {
         super()
     }
+
+    
 }

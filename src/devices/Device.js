@@ -31,6 +31,8 @@ class Device extends View {
         deleteButton.addEventListener("click", () => {
         })
         this.view.appendChild(deleteButton)
+    
+        this.nonDisplayedParameters = []
     }
 
     setDeviceTitle(title) {
@@ -65,19 +67,7 @@ class Device extends View {
         this.onDeviceChanged = value
         this.updateParametersWithOnDeviceChanged()
     }
-
-    advanceTime(sampleRate) {
-        this.timedSignals["mainTime"].stepLength = this.getMainTimeFrequency() / sampleRate
-
-        for (let key in this.timedSignals) {
-            const timedSignal = this.timedSignals[key]
-            timedSignal.x += timedSignal.stepLength
-        }
-    }
-
-    getMainTimeFrequency() {
-        return 1
-    }
+    
 
     resetForCalculations() {
         this.resetModulationDeltas()
@@ -96,5 +86,16 @@ class Device extends View {
 		for (let key in parameters) {
 			parameters[key].modulationDelta = 0
 		}
+    }
+
+    advanceTime(sampleRate) {
+        for (let key in this.timedSignals) {
+            const timedSignal = this.timedSignals[key]
+            timedSignal.x += timedSignal.stepLength
+        }
+    }
+
+    getModulatableParameters() {
+        return Object.values(this.parameters).concat(this.nonDisplayedParameters)
     }
 }
