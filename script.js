@@ -42,6 +42,8 @@ var connectionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
 // Distortion
 var distortionAmountScalableParameterType = new ScalableParameter(0.5, 0, 1)
 
+var bitCrusherBitDepthScalableParameterType = new ScalableParameter(8, 1, 16)
+
 var delayTimeScalableParameterType = new ScalableParameter(0.5, 1, 1000)
 var delayFeedbackScalableParameterType = new ScalableParameter(0.5, 0, 1)
 
@@ -171,6 +173,13 @@ const modulatableParametersForType = (type) => {
 			{
 				name: "release",
 				title: "Release",
+			}
+		]
+	} else if (type == "bitCrusher") {
+		return [
+			{
+				name: "bitDepth",
+				title: "Bit depth",
 			}
 		]
 	}
@@ -460,6 +469,24 @@ function calculateBuffer(length, scale) {
 				if (device.history.length > maxPeriodInSamples) {
 					device.history.splice(0, 1)
 				}
+
+				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "previousValue", signal)
+
+				if (device.mainOutput) {
+					output += signal
+				}
+			} else if (device.type == "bitCrusher") {
+				const bitDepth = Math.max(0, Math.min(1, modulatedDevices[deviceIndex].bitDepth))
+
+				const bitDepthScaled = bitCrusherBitDepthScalableParameterType.getScaledValueForValue(bitDepth)
+
+				const inputValue = modulatedDevices[deviceIndex]["inputValue"]
+
+				const fullRange = 2
+				const resolution = Math.pow(2, bitDepthScaled)
+				const quantum = fullRange / (resolution - 1)
+				const rounded = Math.round(inputValue / quantum) * quantum
+				var signal = Math.min(1, Math.max(-1, rounded))
 
 				setPropertyOfConnectionPartyDeviceWithId(connectionePartyDeviceIdsCache[deviceIndex], "previousValue", signal)
 
@@ -1417,6 +1444,114 @@ function addCompressorViewFromModel(model) {
 	updateDropDowns()
 }
 
+function addBitCrusherViewFromModel(model) {
+	const id = model.id;
+	const name = model.name;
+	const effectsView = document.getElementById("effects");
+	const effectView = document.createElement("div");
+	effectView.classList.add("effect");
+
+	const effectTitle = document.createElement("div");
+	effectTitle.innerHTML = name;
+	effectTitle.classList.add("device-title");
+	effectTitle.classList.add("text");
+	effectView.appendChild(effectTitle);
+
+	const bitDepthSection = document.createElement("div");
+	bitDepthSection.classList.add("bit-depth-section");
+	effectView.appendChild(bitDepthSection);
+
+	const bitDepthLabel = document.createElement("div");
+	bitDepthLabel.innerHTML = "Bit depth";
+	bitDepthLabel.classList.add("bit-depth-label");
+	bitDepthLabel.classList.add("text");
+	bitDepthSection.appendChild(bitDepthLabel);
+
+	const bitDepthControl = document.createElement("input");
+	bitDepthControl.type = "range";
+	bitDepthControl.min = 0;
+	bitDepthControl.max = 1000;
+	bitDepthControl.value = sliderDefaultViewValue;
+	bitDepthControl.classList.add("bit-depth-control");
+	bitDepthControl.addEventListener("input", (event) => {
+		const index = findEffectIndexById(id)
+		effects[index].bitDepth = getUnscaledSliderValue(event.target.value);
+		updateOscilloscope()
+	})
+	bitDepthSection.appendChild(bitDepthControl);
+
+	const routingSection = document.createElement("div");
+	routingSection.classList.add("routing-section");
+	effectView.appendChild(routingSection);
+
+	const mainBusSection = document.createElement("div");
+	mainBusSection.classList.add("main-bus-section");
+	
+	const mainBusButton = document.createElement("div");
+	mainBusButton.innerHTML = "Main Bus";
+	mainBusButton.classList.add("main-bus-button");
+	mainBusButton.classList.add("text");
+	mainBusButton.addEventListener("click", () => {
+		const index = findEffectIndexById(id)
+		effects[index].mainBus = !effects[index].mainBus;
+		const ledViews = document.getElementsByClassName("main-bus-led")
+		const ledView = ledViews[index]
+		ledView.style.backgroundColor = effects[index].mainBus ? "#19F1FF" : "#aaaaaa"
+		updateConnectionPartyCaches()
+		updateDropDowns()
+		updateOscilloscope()
+	})
+
+	mainBusSection.appendChild(mainBusButton)
+
+	const mainBusLED = document.createElement("div");
+	mainBusLED.classList.add("main-bus-led");
+	mainBusSection.appendChild(mainBusLED)
+
+	const mainOutputSection = document.createElement("div");
+	mainOutputSection.classList.add("main-output-section");
+	effectView.appendChild(mainOutputSection);
+
+	const mainOutputButton = document.createElement("div");
+	mainOutputButton.innerHTML = "Main Output";
+	mainOutputButton.classList.add("main-output-button");
+	mainOutputButton.classList.add("text");
+	mainOutputButton.addEventListener("click", () => {
+		const index = findEffectIndexById(id)
+		effects[index].mainOutput = !effects[index].mainOutput;
+		const ledViews = document.getElementsByClassName("effects-main-output-led")
+		const ledView = ledViews[index]
+		ledView.style.backgroundColor = effects[index].mainOutput ? "#19F1FF" : "#aaaaaa"
+		updateOscilloscope()
+	})
+
+	mainOutputSection.appendChild(mainOutputButton)
+
+	const mainOutputLED = document.createElement("div");
+	mainOutputLED.classList.add("effects-main-output-led");
+	mainOutputSection.appendChild(mainOutputLED)
+
+	routingSection.appendChild(mainOutputSection)
+
+	const deleteButton = document.createElement("div");
+	deleteButton.innerHTML = "x";
+	deleteButton.classList.add("delete-button");
+	deleteButton.addEventListener("click", () => {
+		const index = findEffectIndexById(id)
+		effectsView.removeChild(effectView)
+		effects.splice(index, 1)
+		updateConnectionPartyCaches()
+		updateConnectionsFromRemovingDeviceWithId(id)
+		updateDropDowns()
+		updateOscilloscope()
+	})
+	effectView.appendChild(deleteButton)
+
+	effectsView.appendChild(effectView);
+	updateConnectionPartyCaches()
+	updateDropDowns()
+}
+
 function addDistortion() {
 	let id = generateNewDeviceId();
 	let nameNumber = effects.filter((effect) => effect.type === "distortion").length + 1;
@@ -1485,6 +1620,25 @@ function addCompressor() {
 	effects.push(effectModel)
 
 	addCompressorViewFromModel(effectModel)
+}
+
+function addBitCrusher() {
+	let id = generateNewDeviceId();
+	let nameNumber = effects.filter((effect) => effect.type === "bitCrusher").length + 1;
+	let name = "Bit Crusher " + nameNumber;
+	let sliderDefaultViewValue = 500
+	let effectModel = {
+		id: id,
+		type: "bitCrusher",
+		name: name,
+		bitDepth: getUnscaledSliderValue(sliderDefaultViewValue),
+		mainBus: false,
+		mainOutput: true,
+		inputValue: 0,
+		previousValue: 0
+	}
+	effects.push(effectModel)
+	addBitCrusherViewFromModel(effectModel)
 }
 
 function findConnectionIndexById(id) {
@@ -1572,6 +1726,7 @@ function updateDropDown(i) {
 		destinationOption.text = name;
 		destinationOption.value = id;
 		destinationSelector.appendChild(destinationOption);
+		console.log("Name: " + name + " ID: " + id)
 	})
 
 
@@ -1638,6 +1793,9 @@ function updateParameterDropDown(i) {
 	} else if (destination.type == "compressor") {
 		modulatableParameters = ["inputValue", "threshold", "ratio", "attack", "release"]
 		titles = ["Input", "Threshold", "Ratio", "Attack", "Release"]
+	} else if (destination.type == "bitCrusher") {
+		modulatableParameters = ["inputValue", "bitDepth"]
+		titles = ["Input", "Bit depth"]
 	}
 
 	for (let i = 0; i < modulatableParameters.length; i++) {
@@ -1681,6 +1839,11 @@ function onAddDelayClicked() {
 
 function onAddCompressorClicked() {
 	addCompressor()
+	updateOscilloscope()
+}
+
+function onAddBitCrusherClicked() {
+	addBitCrusher()
 	updateOscilloscope()
 }
 
@@ -1810,6 +1973,17 @@ function updateControlViews() {
 
 			const mainOutputLED = effectView.getElementsByClassName("effects-main-output-led")[0]
 			mainOutputLED.style.backgroundColor = effect.mainOutput ? "#19F1FF" : "#aaaaaa"
+		} else if (effect.type == "bitCrusher") {
+			const effectView = document.getElementsByClassName("effect")[i]
+			const bitDepthInput = effectView.getElementsByTagName("input")[0]
+			
+			bitDepthInput.value = bitCrusherBitDepthScalableParameterType.getSliderForUnscaledValue(effect.bitDepth)
+
+			const mainOutputLED = effectView.getElementsByClassName("effects-main-output-led")[0]
+			mainOutputLED.style.backgroundColor = effect.mainOutput ? "#19F1FF" : "#aaaaaa"
+
+			const mainBusLED = effectView.getElementsByClassName("main-bus-led")[0]
+			mainBusLED.style.backgroundColor = effect.mainBus ? "#19F1FF" : "#aaaaaa"
 		}
 	}
 }
@@ -1921,8 +2095,8 @@ function onRandomPresetClicked () {
 
 	var presetEffects = []
 	var effectsDone = false
-	var effectTypes = ["distortion", "delay", "compressor"]
-	var effectTypeTitles = ["Distortion", "Delay", "Compressor"]
+	var effectTypes = ["distortion", "delay", "compressor", "bitCrusher"]
+	var effectTypeTitles = ["Distortion", "Delay", "Compressor", "Bit Crusher"]
 	var effectCountForType = {}
 	while (!effectsDone && presetEffects.length < safeLimit) {
 		const typeIndex = Math.min(effectTypes.length - 1, Math.floor((Math.random() * effectTypes.length)))
@@ -1969,6 +2143,17 @@ function onRandomPresetClicked () {
 				ratio: Math.random(),
 				attack: Math.random(),
 				release: Math.random(),
+				inputValue: 0,
+				previousValue: 0
+			}
+		} else if (type == "bitCrusher") {
+			effect = {
+				id: nextDeviceId,
+				type: type,
+				name: name,
+				bitDepth: Math.random(),
+				mainBus: Math.random() >= 0.5,
+				mainOutput: Math.random() >= 0.5,
 				inputValue: 0,
 				previousValue: 0
 			}
@@ -2071,6 +2256,8 @@ const setSynthFromPresetObject = (presetObject) => {
 			addDelayViewFromModel(effects[i])
 		} else if (effects[i].type == "compressor") {
 			addCompressorViewFromModel(effects[i])
+		} else if (effects[i].type == "bitCrusher") {
+			addBitCrusherViewFromModel(effects[i])
 		}
 	}
 
