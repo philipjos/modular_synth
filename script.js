@@ -1633,6 +1633,33 @@ function addWaveShaperViewFromModel(model) {
 	effectTitle.classList.add("text");
 	effectView.appendChild(effectTitle);
 
+	const lineDrawer = document.createElement("div");
+	lineDrawer.classList.add("line-drawer");
+	lineDrawer.style.backgroundColor = "#ffffff";
+	lineDrawer.style.height = "100px";
+	
+	const borderWidth = 1
+	lineDrawer.style.borderWidth = borderWidth.toString() + "px";
+	lineDrawer.style.borderStyle = "solid";
+	lineDrawer.style.borderColor = "#eeeeee";
+
+	lineDrawer.style.borderRadius = "5px";
+
+	const margin = 10
+	lineDrawer.style.margin = margin.toString() + "px";
+
+	lineDrawer.style.display = "flex";
+	lineDrawer.style.position = "relative";
+	lineDrawer.addEventListener("click", (event) => {
+		const x = event.clientX - lineDrawer.getBoundingClientRect().left - borderWidth
+		const y = event.clientY - lineDrawer.getBoundingClientRect().top - borderWidth
+		const index = findEffectIndexById(id)
+		effects[index].lineDrawerPoints.push({x: x, y: y})
+		updateLineDrawerFromPoints(index)
+		updateOscilloscope()
+	})
+	effectView.appendChild(lineDrawer);
+
 	const dryWetSection = document.createElement("div");
 	dryWetSection.classList.add("dry-wet-section");
 	effectView.appendChild(dryWetSection);
@@ -1831,7 +1858,8 @@ function addWaveShaper() {
 		mainBus: false,
 		mainOutput: true,
 		inputValue: 0,
-		previousValue: 0
+		previousValue: 0,
+		lineDrawerPoints: []
 	}
 	effects.push(effectModel)
 	addWaveShaperViewFromModel(effectModel)
@@ -2202,6 +2230,29 @@ function updateControlViews() {
 			const mainBusLED = effectView.getElementsByClassName("main-bus-led")[0]
 			mainBusLED.style.backgroundColor = effect.mainBus ? "#19F1FF" : "#aaaaaa"
 		}
+	}
+}
+
+function updateLineDrawerFromPoints(index) {
+	const effect = effects[index]
+	const lineDrawer = document.getElementsByClassName("line-drawer")[index]
+	const lineDrawerPoints = effect.lineDrawerPoints
+
+	for (let i = 0; i < lineDrawerPoints.length; i++) {
+		const point = lineDrawerPoints[i]
+		const x = point.x
+		const y = point.y
+		const lineDrawerPoint = document.createElement("div")
+		const size = 10
+		lineDrawerPoint.classList.add("line-drawer-point")
+		lineDrawerPoint.style.width = size.toString() + "px"
+		lineDrawerPoint.style.height = size.toString() + "px"
+		lineDrawerPoint.style.borderRadius = "50%"
+		lineDrawerPoint.style.backgroundColor = "#000000"
+		lineDrawerPoint.style.position = "absolute"
+		lineDrawerPoint.style.left = x - (size / 2) + "px"
+		lineDrawerPoint.style.top = y - (size / 2) + "px"
+		lineDrawer.appendChild(lineDrawerPoint)
 	}
 }
 
