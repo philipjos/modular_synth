@@ -35,12 +35,17 @@ class SelectionParameter extends Parameter {
     }
 
     updateDropdown() {
+        const previousValue = this.dropdown.value
         this.dropdown.innerHTML = ""
         this.options.forEach(option => {
             const optionElement = document.createElement("option");
             optionElement.value = option.value;
             optionElement.textContent = option.label;
             this.dropdown.appendChild(optionElement);
+
+            if (previousValue == option.value) {
+                this.dropdown.value = option.value
+            }
         });
     }
     

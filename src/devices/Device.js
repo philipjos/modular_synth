@@ -2,6 +2,8 @@ class Device extends View {
     static typeDisplayName = "Device"
     static typeId = "device"
 
+    onDeletePressed = undefined
+
     constructor() {
         super()
 
@@ -29,10 +31,13 @@ class Device extends View {
         deleteButton.innerHTML = "x";
         deleteButton.classList.add("delete-button");
         deleteButton.addEventListener("click", () => {
+            if (this.onDeletePressed) {
+                this.onDeletePressed()
+            }
         })
         this.view.appendChild(deleteButton)
     
-        this.nonDisplayedParameters = []
+        this.nonDisplayedParameters = {}
     }
 
     setDeviceTitle(title) {
@@ -83,9 +88,11 @@ class Device extends View {
 
     resetModulationDeltas() {
         const parameters = this.parameters
-		for (let key in parameters) {
-			parameters[key].modulationDelta = 0
-		}
+        for (let parametersDict of [parameters, this.nonDisplayedParameters]) {
+            for (let key in parametersDict) {
+                parametersDict[key].modulationDelta = 0
+            }
+        }
     }
 
     advanceTime(sampleRate) {
@@ -96,6 +103,10 @@ class Device extends View {
     }
 
     getModulatableParameters() {
-        return Object.values(this.parameters).concat(this.nonDisplayedParameters)
+        return Object.values(this.parameters).concat(Object.values(this.nonDisplayedParameters))
+    }
+
+    removeFromSuperview() {
+        this.view.remove()
     }
 }

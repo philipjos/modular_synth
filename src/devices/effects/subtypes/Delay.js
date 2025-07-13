@@ -11,8 +11,8 @@ class Delay extends Effect {
                 "time",
                 "Time",
                 0,
-                2000,
-                100,
+                0.5,
+                0.015,
                 0
             ),
             feedback: new NumericalParameter(
@@ -24,46 +24,32 @@ class Delay extends Effect {
                 0
             )
         })
-        this.input = new NumericalParameter(
-            "input",
-            "Input",
-            0,
-            1,
-            0,
-            0
-        )
-        this.nonDisplayedParameters = [
-            this.input
-        ]
+
+        this.goesToMainOutput = true
     }
     
-    calculateOutput() {
-        const input = this.input.value
+    calculateOutputFromInput(input) {
         const timeInSamples = this.getTimeInSamples()
+        var output = input
         if (this.memory.length >= timeInSamples) {
             var oneDelayBack = this.memory.shift()
-            var output = input + oneDelayBack
+            output += oneDelayBack
         }
 
-        const feedback = this.parameters.feedback.value / 100
+        const feedback = this.parameters.feedback.getModulatedValue() / 100
         const nonFeedbackAmplitude = 1 - feedback
         const toPushToMemory = input * nonFeedbackAmplitude + output * feedback
         this.memory.push(toPushToMemory)
 
-        // console.log("input", input)
-        // console.log("output", output)
-        // console.log("memory", this.memory)
-        // console.log("timeInSamples", timeInSamples)
-        // console.log("feedback", feedback)
-        // console.log("nonFeedbackAmplitude", nonFeedbackAmplitude)
-        // console.log("toPushToMemory", toPushToMemory)
-
-        return input
+        return output
     }
 
     getTimeInSamples() {
-        console.log("time", this.parameters.time.value)
-        console.log("sampleRate", this.sampleRate)
-        return this.parameters.time.value * this.sampleRate
+        return this.parameters.time.getModulatedValue() * this.sampleRate
+    }
+
+    resetForCalculations() {
+        super.resetForCalculations()
+        this.memory = []
     }
 }

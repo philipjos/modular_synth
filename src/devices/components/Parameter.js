@@ -13,9 +13,9 @@ class Parameter extends View {
     }
 
     setupView() {
-        const titleView = document.createElement("div")
-        titleView.innerHTML = this.displayName
-        this.view.appendChild(titleView)
+        this.titleView = document.createElement("div")
+        this.titleView.innerHTML = this.displayName
+        this.view.appendChild(this.titleView)
     }
 
     setBottomMargin(margin) {

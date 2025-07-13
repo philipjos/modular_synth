@@ -19,7 +19,7 @@ class Connection extends Device {
     updateParameterSelector() {
         const toSelector = this.parameters["to"]
         const destinationComponent = toSelector.getSelectedObject()
-        const parameters = Object.values(destinationComponent.getModulatableParameters())
+        const parameters = destinationComponent ? Object.values(destinationComponent.getModulatableParameters()) : []
         const parameterSelector = this.parameters["parameter"]
         parameterSelector.setOptionsFromObjectsAndUpdateDropdown(parameters)
     }

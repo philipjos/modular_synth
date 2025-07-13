@@ -11,24 +11,26 @@ class ModulatableParameter extends Parameter {
         this.min = min
         this.max = max
         this.updateRangeDerivedValue()
-        if (defaultValue == null) {
-            this.defaultValue = this.rangeDerivedValue / 2 + this.min
-        } else {
-            this.defaultValue = defaultValue
-        }
+        this.updateMiddleDerivedValue()
+
+        this.defaultValue = defaultValue ?? this.middleDerivedValue 
         
         this.value = this.defaultValue
     }
 
     getModulatedValue() {
-        //console.log("getModulatedValue")
-        const scaledModulationDelta = this.modulationDelta * this.rangeDerivedValue
-        const output = parseFloat(this.value) + scaledModulationDelta
-        //console.log(this.modulationDelta, this.rangeDerivedValue, parseFloat(this.value), scaledModulationDelta, output)
+        const scaledModulationDelta = this.modulationDelta * this.rangeDerivedValue / 2
+        let output = parseFloat(this.value) + scaledModulationDelta
+        output = Math.max(this.min, Math.min(this.max, output))
+
         return output
     }
 
     updateRangeDerivedValue() {
         this.rangeDerivedValue = parseFloat(this.max) - parseFloat(this.min)
+    }
+
+    updateMiddleDerivedValue() {
+        this.middleDerivedValue = this.rangeDerivedValue / 2 + this.min
     }
 }

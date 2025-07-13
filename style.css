@@ -157,6 +157,7 @@ button, .main-output-button, .main-bus-button {
     border-radius: 2px;
     cursor: pointer;
     white-space: nowrap;
+    user-select: none;
 }
 
 .play-sound-text {

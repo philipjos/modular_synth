@@ -68,7 +68,7 @@ const oscillatorsView = document.getElementById("oscillators")
 var dropdownStates = {}
 
 var availableOscillatos = [OscillatorProper]
-var availableEffects = [Delay]
+var availableEffects = [Delay, Syncifier]
 var availableOtherDevices = [Connection]
 
 function getUnscaledSliderValue(value) {
@@ -557,7 +557,6 @@ function calculateBuffer(length, scale) {
 		}
 
         for (let device of nonConnectionDevices) {
-			//console.log("debug")
 			device.advanceTime(scale)
 
 			if (device instanceof OutputDevice) {
@@ -658,6 +657,7 @@ function resetDevicesForBufferCalculation(scale) {
 
 	for (let i = 0; i < nonConnectionDevices.length; i++) {
 		nonConnectionDevices[i].sampleRate = scale
+		nonConnectionDevices[i].resetForCalculations()
 	}
 }
 
@@ -2476,7 +2476,23 @@ function addDevice(deviceType) {
         effects.push(device)   
     }
 
+	device.onDeletePressed = () => {onDeletePressed(device)}
+
 	updateOptionsOfAllConnections()
+}
+
+function onDeletePressed(device) {
+	if (device instanceof Oscillator) {
+		oscillators.splice(oscillators.indexOf(device), 1)
+	} else if (device instanceof Connection) {
+        connections.splice(connections.indexOf(device), 1)
+    } else if (device instanceof Effect) {
+		effects.splice(effects.indexOf(device), 1)
+    }
+
+	device.removeFromSuperview()
+	updateOptionsOfAllConnections()
+	updateOscilloscope()
 }
 
 function updateOptionsOfAllConnections() {
@@ -2514,13 +2530,6 @@ for (let i = 0; i < availableDeviceTypes.length; i++) {
 	devicesDropdown.appendChild(effectDropdownItem)
 }
 
-function resetDevicesForCalculations() {
-	const nonConnectionDevices = getNonConnectionDevices()
-	for (let device of nonConnectionDevices) {
-		device.resetForCalculations()
-	}
-}
-
 function getOutputDevices() {
     return oscillators.concat(effects)
 }
@@ -2545,7 +2554,11 @@ updateOscilloscope();
 removeOscillator(oscillators_old[0].id)
 setTab(1)
 addDevice(OscillatorProper)
-addDevice(Delay)
-//addDevice(Connection)
+addDevice(Syncifier)
+addDevice(Connection)
+connections[0].parameters.to.dropdown.value="1"
+connections[0].updateParameterSelector()
+connections[0].parameters.parameter.dropdown.value="1"
+oscillators[0].goesToMainOutput = false
 
 updateOscilloscope();
