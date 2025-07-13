@@ -15,23 +15,27 @@ class NumericalParameter extends ModulatableParameter {
 
     setupSubClassView() {
 
-        const slider = document.createElement("input");
-        slider.type = "range";
-        slider.min = (this.min ?? 0).toString();
-        slider.max = (this.max ?? 1).toString();
+        this.slider = document.createElement("input");
+        this.slider.type = "range";
+        this.slider.min = (this.min ?? 0).toString();
+        this.slider.max = (this.max ?? 1).toString();
         if(this.step == 0) {
-            slider.step = this.rangeDerivedValue / 1000
+            this.slider.step = this.rangeDerivedValue / 1000
         } else {
-            slider.step = this.step
+            this.slider.step = this.step
         }
-        slider.value = this.defaultValue;
-        slider.classList.add("parameter-slider");
-        slider.addEventListener("input", (event) => {
+        this.slider.value = this.defaultValue;
+        this.slider.classList.add("parameter-slider");
+        this.slider.addEventListener("input", (event) => {
             this.value = event.target.value;
             this.externalOnChange()
         })
 
-        this.view.appendChild(slider)
+        this.view.appendChild(this.slider)
+    }
+
+    updateView() {
+        this.slider.value = this.value
     }
 
 }

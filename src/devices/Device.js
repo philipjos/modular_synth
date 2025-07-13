@@ -109,4 +109,23 @@ class Device extends View {
     removeFromSuperview() {
         this.view.remove()
     }
+
+    getPresetObject() {
+        var object = {
+            typeId: this.constructor.typeId,
+            parameters: this.getParametersPresetObject()
+        }
+
+        return object
+    }
+
+    getParametersPresetObject() {
+        var parameters = {}
+        for (let parameterKey in this.parameters) {
+            let parameter = this.parameters[parameterKey]
+            parameters[parameterKey] = parameter.getPresetvalue()
+        }
+
+        return parameters
+    }
 }

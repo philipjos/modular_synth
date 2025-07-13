@@ -48,5 +48,15 @@ class SelectionParameter extends Parameter {
             }
         });
     }
+
+    randomize() {
+        if (this.options.length > 0) {
+            this.dropdown.value = this.options[Math.floor(Math.random() * this.options.length)].value
+        }
+    }
+
+    getPresetvalue() {
+        return this.dropdown.value
+    }
     
 }

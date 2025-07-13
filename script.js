@@ -2119,9 +2119,9 @@ async function saveFile(suggestedName, content) {
 
 function onSavePresetClicked() {
 	const presetObject = {
-		oscillators: oscillators_old,
-		connections: connections_old,
-		effects: effects_old
+		oscillators: oscillators.map((e) => {return e.getPresetObject()}),
+		connections: connections.map((e) => {return e.getPresetObject()}),
+		effects: effects.map((e) => {return e.getPresetObject()})
 	}
 
 	const presetString = JSON.stringify(presetObject)
@@ -2144,186 +2144,43 @@ function onLoadPresetClicked() {
 }
 
 function onRandomPresetClicked () {
-	var presetObject = {}
+	clearPreset()
 
-	var nextDeviceId = 1
 	const safeLimit = 100
-	var presetOscillators = []
-	var oscillatorsDone = false
-	var oscillatorCountForType = {}
-	while (!oscillatorsDone && presetOscillators.length < safeLimit) {
-		const types = ["oscillator", "noise"]
-		const typeTitles = ["Oscillator", "Noise oscillator"]
-		const typeIndex = Math.min(types.length - 1, Math.floor((Math.random() * types.length)))
-		const type = types[typeIndex]
-		const typeTitle = typeTitles[typeIndex]
-		if (!oscillatorCountForType[type]) {
-			oscillatorCountForType[type] = 0
-		}
-		const count = oscillatorCountForType[type]
-		const nameNumber = count + 1
-		const name = typeTitle + " " + nameNumber
-		var oscillator = {}
 
-		if (type == "oscillator") {
-			oscillator = {
-				id: nextDeviceId,
-				name: name,
-				type: type,
-				frequency: Math.random(),
-				amplitude: Math.random(),
-				phase: Math.random(),
-				shape: Math.random(),
-				partials: Math.random(),
-				sync: Math.random(),
-				mainOutput: Math.random() >= 0.5,
-				timedSignalX: 0,
-				syncTimedSignalX: 0,
-				previousValue: 0
-			}
-		} else if (type == "noise") {
-			oscillator = {
-				id: nextDeviceId,
-				name: name,
-				type: type,
-				rate: Math.random(),
-				amplitude: Math.random(),
-				mainOutput: Math.random() >= 0.5,
-				timedSignalX: 0,
-				previousValue: 0
-			}
-		}
-		
-			
-		presetOscillators.push(oscillator)
-		oscillatorCountForType[type] += 1
-		nextDeviceId += 1
+	var addDevicesDone = false
+	var i = 0
+	while (!addDevicesDone && i < safeLimit) {
+		let deviceType = availableDeviceTypes[Math.floor(Math.random() * availableDeviceTypes.length)]
+		addDevice(deviceType)
 
-		oscillatorsDone = (Math.random() <= 0.5)
+		addDevicesDone = Math.random() >= 0.95
+		i += 1
 	}
 
-	var presetEffects = []
-	var effectsDone = false
-	var effectTypes = ["distortion", "delay", "compressor", "bitCrusher"]
-	var effectTypeTitles = ["Distortion", "Delay", "Compressor", "Bit Crusher"]
-	var effectCountForType = {}
-	while (!effectsDone && presetEffects.length < safeLimit) {
-		const typeIndex = Math.min(effectTypes.length - 1, Math.floor((Math.random() * effectTypes.length)))
-		const type = effectTypes[typeIndex]
-		const typeTitle = effectTypeTitles[typeIndex]
-		if (!effectCountForType[type]) {
-			effectCountForType[type] = 0
-		}
-		const count = effectCountForType[type]
-		const nameNumber = count + 1
-		const name = typeTitle + " " + nameNumber
-
-		var effect = {}
-
-		if (type == "distortion") {
-			effect = {
-				id: nextDeviceId,
-				type: type,
-				name: name,
-				amount: Math.random(),
-				mainBus: Math.random() >= 0.5,
-				mainOutput: Math.random() >= 0.5,
-				inputValue: 0,
-				previousValue: 0
-			}
-		} else if (type == "delay") {
-			effect = {
-				id: nextDeviceId,
-				type: type,
-				name: name,
-				time: Math.random(),
-				feedback: Math.random(),
-				mainBus: Math.random() >= 0.5,
-				mainOutput: Math.random() >= 0.5,
-				inputValue: 0,
-				previousValue: 0
-			}
-		} else if (type == "compressor") {
-			effect = {
-				id: nextDeviceId,
-				type: type,
-				name: name,
-				threshold: Math.random(),
-				ratio: Math.random(),
-				attack: Math.random(),
-				release: Math.random(),
-				inputValue: 0,
-				previousValue: 0
-			}
-		} else if (type == "bitCrusher") {
-			effect = {
-				id: nextDeviceId,
-				type: type,
-				name: name,
-				bitDepth: Math.random(),
-				sampleRate: Math.random(),
-				mainBus: Math.random() >= 0.5,
-				mainOutput: Math.random() >= 0.5,
-				inputValue: 0,
-				previousValue: 0
-			}
+	for (let device of getNonConnectionDevices()) {
+		if (device instanceof OutputDevice) {
+			device.goesToMainOutput = Math.random() >= 0.5
+			device.updateMainOutputLED()
 		}
 
-		presetEffects.push(effect)
-		effectCountForType[type] += 1
-		nextDeviceId += 1
-
-		effectsDone = Math.random() <= 0.5
+		for (let parameterKey in device.parameters) {
+			let parameter = device.parameters[parameterKey]
+			if (parameter instanceof ModulatableParameter) {
+				device.parameters[parameterKey].value = parameter.min + Math.random() * parameter.rangeDerivedValue
+				device.parameters[parameterKey].updateView()
+			}
+		}
 	}
 
-	var presetConnections = []
-	var connectionsDone = false
-	const deviceCount = presetOscillators.length + presetEffects.length
-	while (!connectionsDone && presetConnections.length < safeLimit) {
-		var sourceId = 0
-		const sourceIdRandomVariable = Math.min(deviceCount - 1, Math.floor(Math.random() * deviceCount))
-		if (sourceIdRandomVariable < presetOscillators.length) {
-			sourceId = presetOscillators[sourceIdRandomVariable].id
-		} else if (sourceIdRandomVariable <= deviceCount) {
-			const index = sourceIdRandomVariable - presetOscillators.length
-			sourceId = presetEffects[index].id
-		}
-
-		var destinationId = 0
-		const destinationIdRandomVariable = Math.min(deviceCount - 1, Math.floor(Math.random() * deviceCount))
-		if (destinationIdRandomVariable < presetOscillators.length) {
-			destinationId = presetOscillators[destinationIdRandomVariable].id
-		} else if (destinationIdRandomVariable <= deviceCount) {
-			const index = destinationIdRandomVariable - presetOscillators.length
-			destinationId = presetEffects[index].id
-		}
-
-		const presetDevices = presetOscillators.concat(presetEffects)
-		const destinationType = presetDevices.find((device) => device.id === destinationId).type
-
-		const amount = Math.random()
-		const parameters = modulatableParametersForType(destinationType)
-		const parameterIndex = Math.min(parameters.length - 1, Math.floor(Math.random() * parameters.length))
-		const parameter = parameterIndex.toString()
-
-		const connection = {
-			id: nextDeviceId,
-			source: sourceId,
-			destination: destinationId,
-			amount: amount,
-			destinationParameter: parameter
-		}
-		presetConnections.push(connection)
-		nextDeviceId += 1
-
-		connectionsDone = Math.random() <= 0.5
+	for (let connection of connections) {
+		connection.parameters.from.randomize()
+		connection.parameters.to.randomize()
+		connection.updateParameterSelector()
+		connection.parameters.parameter.randomize()
 	}
 
-	presetObject.oscillators = presetOscillators
-	presetObject.connections = presetConnections
-	presetObject.effects = presetEffects
-
-	setSynthFromPresetObject(presetObject)
+	updateOscilloscope()
 }
 
 const loadPreset = (presetFile) => {
@@ -2335,53 +2192,50 @@ const loadPreset = (presetFile) => {
 	reader.readAsText(presetFile)
 }
 
-const setSynthFromPresetObject = (presetObject) => {
-	oscillators_old = presetObject.oscillators
-
-	const oscillatorsView = document.getElementById("oscillators")
+function clearPreset() {
+	oscillators = []
+	effects = []
+	connections = []
 	oscillatorsView.innerHTML = ""
-
-	const effectsView = document.getElementById("effects")
 	effectsView.innerHTML = ""
-
-	const connectionsView = document.getElementById("connections")
 	connectionsView.innerHTML = ""
+}
 
-	for (let i = 0; i < oscillators_old.length; i++) {
-		const oscillator = oscillators_old[i]
-		const type = oscillator.type
-		if (type == "oscillator") {
-			addOscillatorViewFromModel(oscillator)
-		} else if (type == "noise") {
-			addNoiseViewFromModel(oscillator)
+const setSynthFromPresetObject = (presetObject) => {
+	clearPreset()
+
+	let devices = presetObject.oscillators.concat(presetObject.effects).concat(presetObject.connections)
+	for (let presetDevice of devices) {
+		let deviceType = findDeviceTypeWithId(presetDevice.typeId)
+		let device = addDevice(deviceType)
+
+		if (device instanceof OutputDevice) {
+			device.goesToMainOutput = presetDevice.goesToMainOutput
+		}
+
+		for (let parameterKey in device.parameters) {
+				let parameter = device.parameters[parameterKey]
+				parameter.value = presetDevice.parameters[parameterKey]
+				parameter.updateView()
+			}
+
+		if (device instanceof Connection) {
+			device.parameters.from.dropdown.value = presetDevice.parameters.from
+			device.parameters.to.dropdown.value = presetDevice.parameters.to
+			device.updateParameterSelector()
+			device.parameters.parameter.dropdown.value = presetDevice.parameters.parameter
 		}
 	}
 
-	effects_old = presetObject.effects
-
-	for (let i = 0; i < effects_old.length; i++) {
-		if (effects_old[i].type == "distortion") {
-			addDistortionViewFromModel(effects_old[i])
-		} else if (effects_old[i].type == "delay") {
-			addDelayViewFromModel(effects[i])
-		} else if (effects_old[i].type == "compressor") {
-			addCompressorViewFromModel(effects[i])
-		} else if (effects_old[i].type == "bitCrusher") {
-			addBitCrusherViewFromModel(effects[i])
-		}
-	}
-
-	connections_old = presetObject.connections
-	for (let i = 0; i < connections_old.length; i++) {
-		addConnectionViewFromModel(connections_old[i])
-	}
-	
-	
-	updateConnectionPartyCaches()
-	updateDropDowns()
-	updateConnectionDropdownSelectionsFromModel()
 	updateOscilloscope()
-	updateControlViews()
+}
+
+function findDeviceTypeWithId(id) {
+	for (let type of availableDeviceTypes) {
+		if (type.typeId == id) {
+			return type
+		}
+	}
 }
 
 function updateConnectionDropdownSelectionsFromModel() {
@@ -2479,6 +2333,8 @@ function addDevice(deviceType) {
 	device.onDeletePressed = () => {onDeletePressed(device)}
 
 	updateOptionsOfAllConnections()
+
+	return device
 }
 
 function onDeletePressed(device) {
@@ -2519,15 +2375,15 @@ const availableDeviceTypes = getAvailableDeviceTypes()
 const devicesDropdown = document.getElementsByClassName("dropdown-content")[0]
 
 for (let i = 0; i < availableDeviceTypes.length; i++) {
-	const effect = availableDeviceTypes[i]
-	const effectDropdownItem = document.createElement("div")
-	effectDropdownItem.classList.add("dropdown-item")
-	effectDropdownItem.innerHTML = effect.typeDisplayName
+	const device = availableDeviceTypes[i]
+	const deviceDropdownItem = document.createElement("div")
+	deviceDropdownItem.classList.add("dropdown-item")
+	deviceDropdownItem.innerHTML = device.typeDisplayName
 
-	effectDropdownItem.addEventListener("click", (e) => {
-		this.onAddDeviceClicked(effect)
+	deviceDropdownItem.addEventListener("click", (e) => {
+		this.onAddDeviceClicked(device)
 	})
-	devicesDropdown.appendChild(effectDropdownItem)
+	devicesDropdown.appendChild(deviceDropdownItem)
 }
 
 function getOutputDevices() {

@@ -31,4 +31,12 @@ class OutputDevice extends Device {
     updateMainOutputLED() {
         this.mainOutputLED.style.backgroundColor = this.goesToMainOutput ? "#19F1FF" : "#aaaaaa"
     }
+
+    getPresetObject() {
+        var object = super.getPresetObject()
+
+        object.goesToMainOutput = this.goesToMainOutput
+
+        return object
+    }
 }

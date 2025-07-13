@@ -26,4 +26,10 @@ class Parameter extends View {
         this.externalOnChange = value
     }
 
+    updateView() {
+    }
+
+    getPresetvalue() {
+        return this.value
+    }
 }
