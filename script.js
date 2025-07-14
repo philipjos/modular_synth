@@ -1,5 +1,10 @@
+const testCompressor = true
+
 let oscilloscopeWidth = 300
 let oscilloscopeHeight = 100
+
+let oscillatorWidthsPerSecond = 50
+let pixelsPerSecond = oscillatorWidthsPerSecond * oscilloscopeWidth
 
 let playingVolume = 0
 let playingEnvelopeAttack = 0.02
@@ -68,7 +73,7 @@ const oscillatorsView = document.getElementById("oscillators")
 var dropdownStates = {}
 
 var availableOscillatos = [OscillatorProper]
-var availableEffects = [Delay, Syncifier]
+var availableEffects = [Delay, Syncifier, Compressor]
 var availableOtherDevices = [Connection]
 
 function getUnscaledSliderValue(value) {
@@ -576,8 +581,6 @@ function calculateBuffer(length, scale) {
 }
 
 function updateOscilloscope() {
-	let oscillatorWidthsPerSecond = 50
-	let pixelsPerSecond = oscillatorWidthsPerSecond * oscilloscopeWidth
 	let outputBuffer = calculateBuffer(oscilloscopeWidth, pixelsPerSecond)
 
 	oscilloscope.updateFromBuffer(outputBuffer)
@@ -2308,26 +2311,30 @@ function addDevice(deviceType) {
 	const device = new deviceType()
 	device.setOnDeviceChanged(onDeviceChanged)
 
+	let deviceArray
 	if (device instanceof Oscillator) {
-		device.appendToView(oscillatorsView)
+		deviceArray = oscillators
+	} else if (device instanceof Connection) {
+		deviceArray = connections
+    } else if (device instanceof Effect) {
+		deviceArray = effects
+    }
 
-		let nameNumber = oscillators_old.filter((oscillator) => oscillator.type === deviceType.typeId).length + 1;
+	if (deviceArray && !(device instanceof Connection)) {
+		let nameNumber = deviceArray.filter((device) => device.constructor.typeId === deviceType.typeId).length + 1;
 		const deviceTitle = deviceType.typeDisplayName + " " + nameNumber
 		device.setDeviceTitle(deviceTitle)
+	}
 
+	if (device instanceof Oscillator) {
         oscillators.push(device)
+		device.appendToView(oscillatorsView)
 	} else if (device instanceof Connection) {
-        device.appendToView(connectionsView)
-        let nameNumber = connections_old.filter((connection) => connection.type === deviceType.typeId).length + 1;
-        device.setDeviceTitle(deviceType.typeDisplayName + " " + nameNumber)
-
         connections.push(device)
+        device.appendToView(connectionsView)
     } else if (device instanceof Effect) {
+        effects.push(device)
         device.appendToView(effectsView)
-        let nameNumber = effects_old.filter((effect) => effect.type === deviceType.typeId).length + 1;
-    	device.setDeviceTitle(deviceType.typeDisplayName + " " + nameNumber)
-
-        effects.push(device)   
     }
 
 	device.onDeletePressed = () => {onDeletePressed(device)}
@@ -2407,14 +2414,23 @@ setTab(0);
 updateOscilloscope();
 
 // Test setup
-removeOscillator(oscillators_old[0].id)
-setTab(1)
-addDevice(OscillatorProper)
-addDevice(Syncifier)
-addDevice(Connection)
-connections[0].parameters.to.dropdown.value="1"
-connections[0].updateParameterSelector()
-connections[0].parameters.parameter.dropdown.value="1"
-oscillators[0].goesToMainOutput = false
+if (testCompressor) {
+	clearPreset()
+	setTab(2)
+	addDevice(OscillatorProper)
+	addDevice(Compressor)
 
-updateOscilloscope();
+	addDevice(Connection)
+	connections[0].parameters.to.dropdown.value="1"
+	connections[0].updateParameterSelector()
+	connections[0].parameters.parameter.dropdown.value="4"
+	connections[0].parameters.amount.value = 1
+	oscillators[0].goesToMainOutput = false
+	oscillators[0].parameters.amplitude.value = 1
+	let oscilloscopePeriod = 1 / oscillatorWidthsPerSecond
+	effects[0].parameters.attack.value = 0.25 * oscilloscopePeriod * 1000
+	effects[0].parameters.release.value = 1 * oscilloscopePeriod * 1000
+	effects[0].parameters.threshold.value = 0.1
+
+	updateOscilloscope();
+}

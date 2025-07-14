@@ -1,4 +1,7 @@
 class Syncifier extends Effect {
+    static typeDisplayName = "Syncifier"
+    static typeId = "syncifier"
+
     constructor(sampleRate) {
         super()
 
