@@ -1,9 +1,13 @@
 class SelectionParameter extends Parameter {
-    constructor(typeId, typeDisplayName) {
+    constructor(typeId, typeDisplayName, options = undefined) {
         super(typeId, typeDisplayName)
 
         this.options = []
         this.onChange = () => {}
+
+        if (options) {
+            this.setOptionsAndUpdateDropdown(options)
+        }
     }
 
     setupView() {

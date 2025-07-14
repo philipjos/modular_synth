@@ -18,6 +18,7 @@ var effects_old = []
 var oscillators = []
 var connections = []
 var effects = []
+var otherDevices = []
 
 var connectionePartyDeviceIdsCache = []
 var connectionPartyNamesCache = []
@@ -69,12 +70,14 @@ const oscilloscopeContainer = document.getElementById("oscilloscope-container")
 const effectsView = document.getElementById("effects");
 const connectionsView = document.getElementById("connections");
 const oscillatorsView = document.getElementById("oscillators")
+const otherDevicesView = document.getElementById("other-devices")
 
 var dropdownStates = {}
 
+var availablePinnedDevices = [Connection]
 var availableOscillatos = [OscillatorProper]
 var availableEffects = [Delay, Syncifier, Compressor]
-var availableOtherDevices = [Connection]
+var availableOtherDevices = [EnvelopeTracker]
 
 function getUnscaledSliderValue(value) {
 	return value / 1000
@@ -1772,6 +1775,8 @@ function setTab(tabIndex) {
 		tab = document.getElementById("connections");
 	} else if (tabIndex == 2) {
 		tab = document.getElementById("effects");
+	} else if (tabIndex == 3) {
+		tab = document.getElementById("other-devices");
 	}
 
 	tab.style.display = "flex"
@@ -2207,7 +2212,7 @@ function clearPreset() {
 const setSynthFromPresetObject = (presetObject) => {
 	clearPreset()
 
-	let devices = presetObject.oscillators.concat(presetObject.effects).concat(presetObject.connections)
+	let devices = presetObject.oscillators.concat(presetObject.effects).concat(presetObject.connections).concat(presetObject.otherDevices)
 	for (let presetDevice of devices) {
 		let deviceType = findDeviceTypeWithId(presetDevice.typeId)
 		let device = addDevice(deviceType)
@@ -2311,14 +2316,7 @@ function addDevice(deviceType) {
 	const device = new deviceType()
 	device.setOnDeviceChanged(onDeviceChanged)
 
-	let deviceArray
-	if (device instanceof Oscillator) {
-		deviceArray = oscillators
-	} else if (device instanceof Connection) {
-		deviceArray = connections
-    } else if (device instanceof Effect) {
-		deviceArray = effects
-    }
+	let deviceArray = getDeviceArrayForDevice(device)
 
 	if (deviceArray && !(device instanceof Connection)) {
 		let nameNumber = deviceArray.filter((device) => device.constructor.typeId === deviceType.typeId).length + 1;
@@ -2335,6 +2333,9 @@ function addDevice(deviceType) {
     } else if (device instanceof Effect) {
         effects.push(device)
         device.appendToView(effectsView)
+    } else if (device instanceof OtherDevice) {
+        otherDevices.push(device)
+        device.appendToView(otherDevicesView)
     }
 
 	device.onDeletePressed = () => {onDeletePressed(device)}
@@ -2344,6 +2345,18 @@ function addDevice(deviceType) {
 	return device
 }
 
+function getDeviceArrayForDevice(device) {
+	if (device instanceof Oscillator) {
+		return oscillators
+	} else if (device instanceof Connection) {
+		return connections
+	} else if (device instanceof Effect) {
+		return effects
+	} else if (device instanceof OtherDevice) {
+		return otherDevices
+	}
+}
+
 function onDeletePressed(device) {
 	if (device instanceof Oscillator) {
 		oscillators.splice(oscillators.indexOf(device), 1)
@@ -2351,7 +2364,9 @@ function onDeletePressed(device) {
         connections.splice(connections.indexOf(device), 1)
     } else if (device instanceof Effect) {
 		effects.splice(effects.indexOf(device), 1)
-    }
+    } else if (device instanceof OtherDevice) {
+		otherDevices.splice(otherDevices.indexOf(device), 1)
+	}
 
 	device.removeFromSuperview()
 	updateOptionsOfAllConnections()
@@ -2375,7 +2390,7 @@ function updateOptionsOfConnection(connection) {
 }
 
 function getAvailableDeviceTypes() {
-	return availableOscillatos.concat(availableEffects).concat(availableOtherDevices)
+	return availablePinnedDevices.concat(availableOscillatos).concat(availableEffects).concat(availableOtherDevices)
 }
 
 const availableDeviceTypes = getAvailableDeviceTypes()
@@ -2394,11 +2409,11 @@ for (let i = 0; i < availableDeviceTypes.length; i++) {
 }
 
 function getOutputDevices() {
-    return oscillators.concat(effects)
+    return oscillators.concat(effects).concat(otherDevices)
 }
 
 function getNonConnectionDevices() {
-	return oscillators.concat(effects)
+	return oscillators.concat(effects).concat(otherDevices)
 }
 
 function onDeviceChanged() {
