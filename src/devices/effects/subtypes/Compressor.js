@@ -55,63 +55,47 @@ class Compressor extends Effect {
         const attackInSamples = attackInSeconds * this.sampleRate
         const releaseInSamples = releaseInSeconds * this.sampleRate
         const envelopeInSamples = attackInSamples + releaseInSamples
-        
-        var maxValue = this.memory.length > 0 ? this.memory[this.memory.length - 1] : 0
-        var maxValueIndex = this.memory.length > 0 ? this.memory.length - 1 : 0
-        var minValue = maxValue
-        var minValueIndex = this.memory.length > 0 ? this.memory.length - 1 : 0
 
         const maxPeriodInSamples = this.sampleRate / compressorMinimumFrequency
 
-        let j = this.memory.length - 1;
+        let i = this.memory.length - 1;
         let triggeringWaveFound = false
         let amplitudeCandidate = 0
         let overrideSignal
-        while (j >= 0 && !triggeringWaveFound) {
-            amplitudeCandidate = Math.abs(this.memory[j] - input) / 2
+        while (i >= 0 && !triggeringWaveFound) {
+            amplitudeCandidate = Math.abs(this.memory[i] - input) / 2
 
             if (amplitudeCandidate >= threshold) {
                 triggeringWaveFound = true
 
-                if (!this.triggered) {
-                    this.amplitude = amplitudeCandidate
+                if (this.peakAmplitudes.length == 0) {
                     this.firstConsecutiveTriggerSampleIndex = this.time
-                    this.triggered = true
-                } else if (this.nextAmplitude > this.amplitude) {
-                    this.nextAmplitude = amplitudeCandidate
                 }
 
-                this.triggeredSampleIndex = this.time
+                let sortedPlaceFound = false
+                let j = 0
+                while (j < this.peakAmplitudes.length && !sortedPlaceFound) {
+                    if (amplitudeCandidate > this.peakAmplitudes[j]) {
+                        this.peakAmplitudes.splice(j, 0, amplitudeCandidate)
+                        this.peakAmplitudeIndices.splice(j, 0, this.time)
+                        sortedPlaceFound = true
+                    }
+                    j += 1
+                }
+                
+                if (!sortedPlaceFound) {
+                    this.peakAmplitudes.push(amplitudeCandidate)
+                    this.peakAmplitudeIndices.push(this.time)
+                }
             }
 
-            j -= 1
+            i -= 1
         }
 
         
         var signal = input
-        if (this.amplitude > 0) {
-            if (this.triggered) {
-                const samplesSinceTrigger = this.time - this.triggeredSampleIndex
-                const sampleSinceFirstConsecutiveTrigger = this.time - this.firstConsecutiveTriggerSampleIndex
-                
-                if (samplesSinceTrigger >= envelopeInSamples) {
-                    this.triggered = false
-                } else {
-                    var envelopeValuePercentage
-                    if (sampleSinceFirstConsecutiveTrigger < attackInSamples) {
-                        envelopeValuePercentage = sampleSinceFirstConsecutiveTrigger / attackInSamples
-                    } else {
-                        envelopeValuePercentage = 1 - Math.max(0, (samplesSinceTrigger - attackInSamples)) / releaseInSamples
-                    }
-
-                    const ratioWithEnvelope = 1 + (ratio - 1) * envelopeValuePercentage
-                    const gainToAddAboveThreshold = (this.amplitude - threshold) / ratioWithEnvelope
-                    const newAmplitude = threshold + gainToAddAboveThreshold
-                    const gain = newAmplitude / this.amplitude
-                    signal *= gain
-                }
-            }
-        }
+        
+        
 
         this.time += 1
         
@@ -126,13 +110,8 @@ class Compressor extends Effect {
     resetForCalculations() {
         super.resetForCalculations()
         this.memory = []
-        this.triggered = false
+        this.
+        this.peakAmplitudeIndices = []
         this.firstConsecutiveTriggerSampleIndex = 0
-        this.triggeredSampleIndex = 0
-        this.time = 0
-        this.amplitude = 0
-        this.nextAmplitude = 0
-        this.peakAmplitudes = []
-        this.peakAmplitudeIndeces = []
     }
 }
