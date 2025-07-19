@@ -25,6 +25,22 @@ class EnvelopeTracker extends OtherDevice {
                         value: "down"
                     }
                 ]
+            ),
+            attack: new NumericalParameter(
+                "attack",
+                "Attack",
+                0,
+                2000,
+                0.1,
+                0
+            ),
+            release: new NumericalParameter(
+                "release",
+                "Release",
+                0,
+                2000,
+                0.1,
+                0
             )
         })
 
@@ -47,5 +63,9 @@ class EnvelopeTracker extends OtherDevice {
         let output = input;
 
         return output;
+    }
+
+    resetForCalculations() {
+        this.memory = [];
     }
 }
