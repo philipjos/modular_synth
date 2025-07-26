@@ -43,14 +43,7 @@ class Syncifier extends Effect {
             let x = this.memory.length - originPeriod
             
             let syncedX = x * this.parameters.sync.getModulatedValue() % originPeriod
-            if (syncedX == undefined) {
-                console.log("syncedX")
-            }
             output = this.memory[Math.floor(syncedX)]
-            if (output == undefined) {
-                console.log("output")
-                console.log(syncedX)
-            }
         }
 
         this.memory.push(input)

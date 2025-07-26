@@ -1,4 +1,4 @@
-class NumericalParameter extends ModulatableParameter {
+class NumericalParameter extends Parameter {
     constructor(
         id,
         displayName,

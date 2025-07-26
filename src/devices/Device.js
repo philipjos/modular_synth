@@ -26,6 +26,8 @@ class Device extends View {
         this.view.style.padding = "10px"
         this.view.style.position = "relative"
         this.view.style.top = "0px"
+        this.view.style.width = "100%"
+        this.view.style.boxSizing = "border-box"
 
         const deleteButton = document.createElement("div");
         deleteButton.innerHTML = "x";
@@ -103,7 +105,9 @@ class Device extends View {
     }
 
     getModulatableParameters() {
-        return Object.values(this.parameters).concat(Object.values(this.nonDisplayedParameters))
+        return Object.values(this.parameters)
+            .filter((e) => {return e.modulatable})
+            .concat(Object.values(this.nonDisplayedParameters))
     }
 
     removeFromSuperview() {

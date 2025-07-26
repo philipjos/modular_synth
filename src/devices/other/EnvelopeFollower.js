@@ -87,7 +87,7 @@ class EnvelopeFollower extends OtherDevice {
 
         if (!this.envelopeStarted) {
             let newTarget = 0
-            if (this.parameters.bias == 0) {
+            if (this.parameters.bias.getModulatedValue() == 0) {
                 let max = 0
                 for (let i = 0; i < this.memory.length; i++) {
                     let abs = Math.abs(this.memory[i])
@@ -123,7 +123,7 @@ class EnvelopeFollower extends OtherDevice {
                 if (attackInSamples == 0) {
                     this.slope = this.isSlopePositive? 1 : -1
                 } else {
-                    if (this.parameters.slopeMode.value == 0) {
+                    if (this.parameters.slopeMode.getModulatedValue() == 0) {
                         this.slope = (newTarget - this.origin) / attackInSamples 
                     } else {
                         this.slope = 2 / attackInSamples * (this.isSlopePositive ? 1 : -1)

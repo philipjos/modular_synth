@@ -1,12 +1,16 @@
 class SelectionParameter extends Parameter {
     constructor(typeId, typeDisplayName, options = undefined) {
-        super(typeId, typeDisplayName)
+        let maxValue = 0
+        if (options && options.length > 0) {
+            maxValue = options.length - 0.01
+        }
+        super(typeId, typeDisplayName, 0, maxValue)
 
         this.options = []
         this.onChange = () => {}
 
         if (options) {
-            this.setOptionsAndUpdateDropdown(options)
+            this.setOptionsAndUpdate(options)
         }
     }
 
@@ -28,13 +32,16 @@ class SelectionParameter extends Parameter {
         this.updateFromOptionsChanged()
     }
 
-    setOptionsAndUpdateDropdown(options) {
+    setOptionsAndUpdate(options) {
         this.options = options
         this.updateFromOptionsChanged()
     }
 
     updateFromOptionsChanged() {
         this.updateDropdown()
+        this.max = this.getMaxValueFromOptions(this.options)
+        this.updateRangeDerivedValue()
+        this.updateMiddleDerivedValue()
         this.onChange()
     }
 
@@ -63,4 +70,11 @@ class SelectionParameter extends Parameter {
         return this.dropdown.value
     }
     
+    getValue() {
+        return this.options.findIndex((e) => {return e.value == this.dropdown.value})
+    }
+
+    getMaxValueFromOptions(options) {
+        return options.length - 0.01
+    }
 }

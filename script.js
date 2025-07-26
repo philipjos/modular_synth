@@ -2175,7 +2175,7 @@ function onRandomPresetClicked () {
 
 		for (let parameterKey in device.parameters) {
 			let parameter = device.parameters[parameterKey]
-			if (parameter instanceof ModulatableParameter) {
+			if (parameter.modulatable) {
 				device.parameters[parameterKey].value = parameter.min + Math.random() * parameter.rangeDerivedValue
 				device.parameters[parameterKey].updateView()
 			}
