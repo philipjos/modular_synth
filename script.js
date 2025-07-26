@@ -1,4 +1,5 @@
-const testCompressor = true
+const testCompressor = false
+const testEnvelopeTracker = true
 
 let oscilloscopeWidth = 300
 let oscilloscopeHeight = 100
@@ -2446,6 +2447,23 @@ if (testCompressor) {
 	effects[0].parameters.attack.value = 0.25 * oscilloscopePeriod * 1000
 	effects[0].parameters.release.value = 1 * oscilloscopePeriod * 1000
 	effects[0].parameters.threshold.value = 0.1
+
+	updateOscilloscope();
+}
+
+if (testEnvelopeTracker) {
+	clearPreset()
+	setTab(3)
+	addDevice(OscillatorProper)
+	addDevice(EnvelopeTracker)
+
+	addDevice(Connection)
+	connections[0].parameters.to.dropdown.value="1"
+	connections[0].updateParameterSelector()
+	connections[0].parameters.parameter.dropdown.value="4"
+	connections[0].parameters.amount.value = 1
+	oscillators[0].goesToMainOutput = false
+	oscillators[0].parameters.amplitude.value = 1
 
 	updateOscilloscope();
 }
