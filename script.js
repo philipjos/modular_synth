@@ -1,5 +1,5 @@
 const testCompressor = false
-const testEnvelopeTracker = true
+const testEnvelopeFollower = true
 
 let oscilloscopeWidth = 300
 let oscilloscopeHeight = 100
@@ -78,7 +78,7 @@ var dropdownStates = {}
 var availablePinnedDevices = [Connection]
 var availableOscillatos = [OscillatorProper]
 var availableEffects = [Delay, Syncifier, Compressor]
-var availableOtherDevices = [EnvelopeTracker]
+var availableOtherDevices = [EnvelopeFollower]
 
 function getUnscaledSliderValue(value) {
 	return value / 1000
@@ -2451,11 +2451,11 @@ if (testCompressor) {
 	updateOscilloscope();
 }
 
-if (testEnvelopeTracker) {
+if (testEnvelopeFollower) {
 	clearPreset()
 	setTab(3)
 	addDevice(OscillatorProper)
-	addDevice(EnvelopeTracker)
+	addDevice(EnvelopeFollower)
 
 	addDevice(Connection)
 	connections[0].parameters.to.dropdown.value="1"

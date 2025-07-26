@@ -1,6 +1,6 @@
-class EnvelopeTracker extends OtherDevice {
-    static typeDisplayName = "Envelope tracker"
-    static typeId = "envelope_tracker"
+class EnvelopeFollower extends OtherDevice {
+    static typeDisplayName = "Envelope follower"
+    static typeId = "envelope_follower"
 
     constructor() {
         super();
