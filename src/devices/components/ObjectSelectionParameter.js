@@ -1,6 +1,6 @@
 class ObjectSelectionParameter extends SelectionParameter {
-    constructor(typeId, typeDisplayName) {
-        super(typeId, typeDisplayName)
+    constructor(typeId, typeDisplayName, modulatable = true) {
+        super(typeId, typeDisplayName, modulatable)
         
         this.objectsForOptions = []
     }

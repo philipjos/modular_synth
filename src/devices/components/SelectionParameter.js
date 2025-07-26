@@ -1,10 +1,15 @@
 class SelectionParameter extends Parameter {
-    constructor(typeId, typeDisplayName, options = undefined) {
+    constructor(
+        typeId, 
+        typeDisplayName, 
+        options = undefined,
+        modulatable = true
+    ) {
         let maxValue = 0
         if (options && options.length > 0) {
             maxValue = options.length - 0.01
         }
-        super(typeId, typeDisplayName, 0, maxValue)
+        super(typeId, typeDisplayName, 0, maxValue, modulatable)
 
         this.options = []
         this.onChange = () => {}
