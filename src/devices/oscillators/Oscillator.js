@@ -12,6 +12,6 @@ class Oscillator extends OutputDevice {
     }
 
     getMainTimeFrequency() {
-        return 1
+        return this.sampleRate
     }
 }

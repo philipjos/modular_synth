@@ -1,5 +1,6 @@
 const testCompressor = false
-const testEnvelopeFollower = true
+const testEnvelopeFollower = false
+const testOscillator = false
 
 let oscilloscopeWidth = 300
 let oscilloscopeHeight = 100
@@ -76,8 +77,8 @@ const otherDevicesView = document.getElementById("other-devices")
 var dropdownStates = {}
 
 var availablePinnedDevices = [Connection]
-var availableOscillatos = [OscillatorProper]
-var availableEffects = [Delay, Syncifier, Compressor]
+var availableOscillatos = [OscillatorProper, Noise]
+var availableEffects = [Distortion, Delay, Volume, Syncifier, Compressor]
 var availableOtherDevices = [EnvelopeFollower]
 
 function getUnscaledSliderValue(value) {
@@ -2476,3 +2477,17 @@ if (testEnvelopeFollower) {
 
 	updateOscilloscope();
 }
+
+if (testOscillator) {
+	clearPreset()
+	setTab(0)
+	addDevice(OscillatorProper)
+
+	updateOscilloscope();
+}
+
+clearPreset()
+setTab(0)
+addDevice(Noise)
+
+updateOscilloscope();
