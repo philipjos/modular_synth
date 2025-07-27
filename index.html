@@ -115,6 +115,12 @@
                         >
                             Effects
                         </div>
+                        <div
+                            class="dropdown-item"
+                            onClick="setTab(3)"
+                        >
+                            Other
+                        </div>
                     </div>
                 </div>
             </div>
@@ -166,6 +172,8 @@
                 </div>
                 <div id="effects" class="tab">
                 </div>
+                <div id="other-devices" class="tab">
+                </div>
             </div>
         </div>
         <div class="play-sound-text">
@@ -176,7 +184,25 @@
             </div>
         </div>
     </div>
+    <script src="./src/common/View.js"></script>
+    <script src="./src/devices/components/Parameter.js"></script>
+    <script src="./src/devices/components/NumericalParameter.js"></script>
+    <script src="./src/devices/components/SelectionParameter.js"></script>
+    <script src="./src/devices/components/ObjectSelectionParameter.js"></script>
+    <script src="./src/devices/Device.js"></script>
+    <script src="./src/devices/TimedSignal.js"></script>
+    <script src="./src/devices/OutputDevice.js">    </script>
+    <script src="./src/devices/oscillators/Oscillator.js"></script>
+    <script src="./src/devices/oscillators/OscillatorProper.js"></script>
+    <script src="./src/devices/effects/Effect.js"></script>
+    <script src="./src/devices/effects/subtypes/Delay.js"></script>
+    <script src="./src/devices/effects/subtypes/Syncifier.js"></script>
+    <script src="./src/devices/effects/subtypes/Compressor.js"></script>
+    <script src="./src/devices/special/Connection.js"></script>
+    <script src="./src/devices/other/OtherDevice.js"></script>
+    <script src="./src/devices/other/EnvelopeFollower.js"></script>
     <script src="./Oscilloscope/Oscilloscope.js"></script>
     <script src="./ScalableParameter.js"></script>
+    <script src="./src/Synth.js"></script>
     <script src="./script.js"></script>
 </body>

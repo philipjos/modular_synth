@@ -2,6 +2,7 @@ class Oscilloscope {
     constructor(oscilloscopeWidth, oscilloscopeHeight) {
         this.oscilloscopeWidth = oscilloscopeWidth
         this.oscilloscopeHeight = oscilloscopeHeight
+        this.color = "19F1FF"
         this.element = document.createElement("div")
 
         this.element.style.width = oscilloscopeWidth + 'px'
@@ -16,6 +17,7 @@ class Oscilloscope {
     }
 
     updateFromBuffer(buffer) {
+        this.buffer = buffer
         this.element.innerHTML = ""
         
         let xShrink = buffer.length / this.oscilloscopeWidth
@@ -31,9 +33,20 @@ class Oscilloscope {
             line.style.bottom = "0px"
             line.style.left = i.toString() + 'px'
             line.style.width = "1px"
-            line.style.backgroundColor = "19F1FF"
+            line.style.backgroundColor = this.color
         
             this.element.appendChild(line)
         }
+    }
+    
+    setColor(color) {
+        this.color = color
+        if (this.buffer) {
+            this.updateFromBuffer(this.buffer)
+        }
+    }
+
+    setBackgroundColor(backgroundColor) {
+        this.element.style.backgroundColor = backgroundColor
     }
 }

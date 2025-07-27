@@ -26,7 +26,6 @@ class AudioProcessingUI {
     }
 
     onSoundLoaded(sound) {
-        console.log("Load sound pressed");
         this.result = this.process(sound);
         this.updateFromVolumedResult();
     }

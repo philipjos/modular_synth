@@ -16,13 +16,16 @@ class ValueSlider extends View {
         contentRow.appendChild(this.slider);
         contentRow.appendChild(this.textInput)
 
-        this.slider.oninput = this.onInput.bind(this)
+        this.slider.oninput = this._onInput.bind(this)
         this.updateViewFromValue()
     }
 
-    onInput(e) {
+    _onInput(e) {
         this.value = e.target.value;
         this.updateTextFromValue()
+        if (this.onInput) {
+            this.onInput(this.value)
+        }
     }
 
     updateViewFromValue() {

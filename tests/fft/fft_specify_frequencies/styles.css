@@ -4,3 +4,17 @@ body {
     gap: 10px;
     font-family: 'Courier New', Courier, monospace;
 }
+
+#meters-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#info {
+    border: 2px solid #c6c6c6;
+    background-color: #e5e5e5;
+    padding: 0px 10px 0px 10px;
+    border-radius: 5px;
+    margin: 10px 0px 10px 0px;
+}
