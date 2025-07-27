@@ -2130,7 +2130,8 @@ function onSavePresetClicked() {
 	const presetObject = {
 		oscillators: oscillators.map((e) => {return e.getPresetObject()}),
 		connections: connections.map((e) => {return e.getPresetObject()}),
-		effects: effects.map((e) => {return e.getPresetObject()})
+		effects: effects.map((e) => {return e.getPresetObject()}),
+		otherDevices: otherDevices.map((e) => {return e.getPresetObject()})
 	}
 
 	const presetString = JSON.stringify(presetObject)
@@ -2219,7 +2220,7 @@ const setSynthFromPresetObject = (presetObject) => {
 		.concat(presetObject.effects)
 		.concat(presetObject.connections)
 		.concat(presetObject.otherDevices)
-		
+
 	for (let presetDevice of devices) {
 		let deviceType = findDeviceTypeWithId(presetDevice.typeId)
 		let device = addDevice(deviceType)
