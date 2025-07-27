@@ -2205,15 +2205,21 @@ function clearPreset() {
 	oscillators = []
 	effects = []
 	connections = []
+	otherDevices = []
 	oscillatorsView.innerHTML = ""
 	effectsView.innerHTML = ""
 	connectionsView.innerHTML = ""
+	otherDevicesView.innerHTML = ""
 }
 
 const setSynthFromPresetObject = (presetObject) => {
 	clearPreset()
 
-	let devices = presetObject.oscillators.concat(presetObject.effects).concat(presetObject.connections).concat(presetObject.otherDevices)
+	let devices = presetObject.oscillators
+		.concat(presetObject.effects)
+		.concat(presetObject.connections)
+		.concat(presetObject.otherDevices)
+		
 	for (let presetDevice of devices) {
 		let deviceType = findDeviceTypeWithId(presetDevice.typeId)
 		let device = addDevice(deviceType)
