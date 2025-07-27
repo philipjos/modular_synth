@@ -227,7 +227,7 @@ button, .main-output-button, .main-bus-button {
     overflow-y: hidden;
 }
 
-#oscillators, #connections, #effects {
+#oscillators, #connections, #effects, #other-devices {
     display: flex;
     flex-direction: column;
     gap: 8px;
