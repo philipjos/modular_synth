@@ -2434,8 +2434,8 @@ function onDeviceChanged() {
 addTapOutHandler()
 oscilloscope.appendToView(oscilloscopeContainer);
 updateMainVolumeSliderFromModel();
-addOscillator();
-//addConnection();
+addDevice(OscillatorProper)
+
 setTab(0);
 updateOscilloscope();
 
