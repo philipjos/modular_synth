@@ -78,7 +78,7 @@ var dropdownStates = {}
 
 var availablePinnedDevices = [Connection]
 var availableOscillatos = [OscillatorProper, Noise]
-var availableEffects = [Distortion, Delay, Volume, Syncifier, Compressor]
+var availableEffects = [Distortion, Delay, Volume, Syncifier, Compressor, BitCrusher]
 var availableOtherDevices = [EnvelopeFollower]
 
 function getUnscaledSliderValue(value) {
@@ -2485,9 +2485,5 @@ if (testOscillator) {
 
 	updateOscilloscope();
 }
-
-clearPreset()
-setTab(0)
-addDevice(Noise)
 
 updateOscilloscope();
