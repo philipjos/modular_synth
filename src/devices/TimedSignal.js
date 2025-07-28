@@ -1,12 +1,12 @@
 class TimedSignal {
-    constructor(stepLength = 0) {
+    constructor(stepSize = 0) {
         this.x = 0
-        this.stepLength = stepLength
-        this.initialstepLength = stepLength
+        this.stepSize = stepSize
+        this.initialStepSize = stepSize
     }
 
     reset() {
         this.x = 0
-        this.stepLength = this.initialstepLength
+        this.stepSize = this.initialStepSize
     }
 }

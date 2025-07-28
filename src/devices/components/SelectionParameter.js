@@ -82,4 +82,8 @@ class SelectionParameter extends Parameter {
     getMaxValueFromOptions(options) {
         return options.length - 0.01
     }
+
+    setValue(value) {
+        this.dropdown.value = this.options[value].value
+    }
 }

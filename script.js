@@ -1845,7 +1845,6 @@ function updateDropDown(i) {
 		destinationOption.text = name;
 		destinationOption.value = id;
 		destinationSelector.appendChild(destinationOption);
-		console.log("Name: " + name + " ID: " + id)
 	})
 
 

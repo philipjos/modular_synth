@@ -6,9 +6,12 @@ class Oscillator extends OutputDevice {
     }
 
     advanceTime(sampleRate) {
-        this.timedSignals["mainTime"].stepLength = this.getMainTimeFrequency() / sampleRate
-        
+        this.setStepSizes(sampleRate)
         super.advanceTime(sampleRate)
+    }
+
+    setStepSizes(sampleRate) {
+        this.timedSignals["mainTime"].stepSize = this.getMainTimeFrequency() / sampleRate
     }
 
     getMainTimeFrequency() {
