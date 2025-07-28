@@ -21,12 +21,22 @@ class OscillatorProper extends Oscillator {
                 1,
                 0.75,
                 0
+            ),
+            phase: new NumericalParameter(
+                "phase",
+                "Phase",
+                0,
+                360,
+                0,
+                0
             )
         })
     }
 
     calculateOutput() {
-        var output = Math.sin(this.timedSignals["mainTime"].x * 2 * Math.PI) 
+        const phasedX = this.timedSignals["mainTime"].x * 2 * Math.PI
+            + this.parameters["phase"].getModulatedValue() * Math.PI / 180
+        var output = Math.sin(phasedX) 
 
         output *= this.parameters["amplitude"].getModulatedValue()
 
