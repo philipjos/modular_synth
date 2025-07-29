@@ -78,7 +78,7 @@ var dropdownStates = {}
 
 var availablePinnedDevices = [Connection]
 var availableOscillatos = [OscillatorProper, Noise]
-var availableEffects = [Distortion, Delay, Volume, Syncifier, Compressor, BitCrusher]
+var availableEffects = [Distortion, Delay, Volume, Syncifier, Compressor, BitCrusher, PulseWidth]
 var availableOtherDevices = [EnvelopeFollower]
 
 function getUnscaledSliderValue(value) {
@@ -2484,5 +2484,17 @@ if (testOscillator) {
 
 	updateOscilloscope();
 }
+
+setTab(2)
+addDevice(PulseWidth)
+
+addDevice(Connection)
+connections[0].parameters.to.dropdown.value="1"
+connections[0].updateParameterSelector()
+connections[0].parameters.parameter.dropdown.value="2"
+oscillators[0].goesToMainOutput = false
+oscillators[0].parameters.amplitude.value = 1
+oscillators[0].parameters.frequency.value = 200
+effects[0].parameters.frequency.value = 200
 
 updateOscilloscope();
