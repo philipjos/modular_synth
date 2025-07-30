@@ -78,7 +78,7 @@ class OscillatorProper extends Oscillator {
             )
         })
 
-        this.parameters["shape"].setValue(0)
+        this.parameters["shape"].setValueFromIndex(0)
         
         this.timedSignals["syncTime"] = new TimedSignal()
     }
@@ -97,7 +97,7 @@ class OscillatorProper extends Oscillator {
                 var partialFrequency = 1
                 var partialAmplitude = 1
 
-                switch (this.parameters["shape"].getValue()) {
+                switch (this.parameters["shape"].getModulatedValue()) {
                     case 1:
                         partialFrequency = 2 * i - 1
                         partialAmplitude = 4 / (Math.PI * partialFrequency)

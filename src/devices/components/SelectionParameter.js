@@ -53,6 +53,7 @@ class SelectionParameter extends Parameter {
     updateDropdown() {
         const previousValue = this.dropdown.value
         this.dropdown.innerHTML = ""
+        let wasPreviousValueSet = false
         this.options.forEach(option => {
             const optionElement = document.createElement("option");
             optionElement.value = option.value;
@@ -61,18 +62,28 @@ class SelectionParameter extends Parameter {
 
             if (previousValue == option.value) {
                 this.dropdown.value = option.value
+                wasPreviousValueSet = true
             }
         });
+
+        if (!wasPreviousValueSet) {
+            this.setValueFromIndex(0)
+        }
+        
     }
 
     randomize() {
         if (this.options.length > 0) {
-            this.dropdown.value = this.options[Math.floor(Math.random() * this.options.length)].value
+            this.setValueFromIndex(Math.floor(Math.random() * this.options.length))
         }
     }
 
-    getPresetvalue() {
+    getPresetValue() {
         return this.dropdown.value
+    }
+
+    getModulatedValue() {
+        return Math.floor(super.getModulatedValue())
     }
     
     getValue() {
@@ -83,7 +94,7 @@ class SelectionParameter extends Parameter {
         return options.length - 0.01
     }
 
-    setValue(value) {
-        this.dropdown.value = this.options[value].value
+    setValueFromIndex(index) {
+        this.dropdown.value = this.options[index].value
     }
 }

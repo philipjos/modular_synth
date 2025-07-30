@@ -127,7 +127,7 @@ class Device extends View {
         var parameters = {}
         for (let parameterKey in this.parameters) {
             let parameter = this.parameters[parameterKey]
-            parameters[parameterKey] = parameter.getPresetvalue()
+            parameters[parameterKey] = parameter.getPresetValue()
         }
 
         return parameters

@@ -43,7 +43,6 @@ class ObjectSelectionParameter extends SelectionParameter {
             }
 
             this.idObjectMap[id] = object
-
             this.lastId = id
         }
 
@@ -65,6 +64,12 @@ class ObjectSelectionParameter extends SelectionParameter {
 
     getSelectedObject() {
         const selectedValue = this.dropdown.value
-        return this.objectsForOptions[selectedValue]
+        
+        return this.idObjectMap[selectedValue]
+    }
+
+    setSelectedObject(object) {
+        const id = Object.keys(this.idObjectMap).find((key) => this.idObjectMap[key] === object)
+        this.dropdown.value = id
     }
 }

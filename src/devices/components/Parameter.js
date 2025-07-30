@@ -44,7 +44,7 @@ class Parameter extends View {
     updateView() {
     }
 
-    getPresetvalue() {
+    getPresetValue() {
         return this.getValue()
     }
 
