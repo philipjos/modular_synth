@@ -2485,16 +2485,19 @@ if (testOscillator) {
 	updateOscilloscope();
 }
 
-setTab(1)
-addDevice(PulseWidth)
+setTab(0)
+addDevice(OscillatorProper)
 
 addDevice(Connection)
-connections[0].parameters.to.setSelectedObject(effects[0])
+connections[0].parameters.to.setSelectedObject(oscillators[1])
 connections[0].updateParameterSelector()
-connections[0].parameters.parameter.setSelectedObject(effects[0].nonDisplayedParameters.input)
+connections[0].parameters.parameter.setSelectedObject(oscillators[1].parameters.shape)
+connections[0].parameters.amount.value = 1
 oscillators[0].goesToMainOutput = false
+oscillators[0].parameters.shape.setValueFromIndex(1)
+oscillators[0].parameters.frequency.value = 40
 oscillators[0].parameters.amplitude.value = 1
-oscillators[0].parameters.frequency.value = 200
-effects[0].parameters.frequency.value = 200
+oscillators[0].parameters.phase.value = 180
+oscillators[1].parameters.shape.setValueFromIndex(2)
 
 updateOscilloscope();

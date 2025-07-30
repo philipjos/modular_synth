@@ -3,13 +3,14 @@ class SelectionParameter extends Parameter {
         typeId, 
         typeDisplayName, 
         options = undefined,
+        defaultValue = null,
         modulatable = true
     ) {
         let maxValue = 0
         if (options && options.length > 0) {
             maxValue = options.length - 0.01
         }
-        super(typeId, typeDisplayName, 0, maxValue, modulatable)
+        super(typeId, typeDisplayName, 0, maxValue, defaultValue, modulatable)
 
         this.options = []
         this.onChange = () => {}
@@ -66,7 +67,7 @@ class SelectionParameter extends Parameter {
             }
         });
 
-        if (!wasPreviousValueSet) {
+        if (!wasPreviousValueSet && this.options.length > 0) {
             this.setValueFromIndex(0)
         }
         

@@ -89,7 +89,7 @@ class OscillatorProper extends Oscillator {
         const phasedX = this.timedSignals["syncTime"].x * 2 * Math.PI
             + this.parameters["syncPhase"].getModulatedValue() * Math.PI / 180
 
-        if (this.parameters["shape"].getValue() == 0) {
+        if (this.parameters["shape"].getModulatedValue() == 0) {
             output = Math.sin(phasedX)
         } else {
             for (let i = 1; i <= this.parameters["partials"].getModulatedValue(); i++) {
