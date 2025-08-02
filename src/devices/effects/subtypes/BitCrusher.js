@@ -2,12 +2,12 @@ class BitCrusher extends Effect {
     static typeDisplayName = "Bit crusher"
     static typeId = "bitCrusher"
 
-    constructor() {
-        super()
+    constructor(objectIDManager) {
+        super(objectIDManager)
 
         this.setParametersAndSetup({
             bitDepth: new NumericalParameter(
-                "bitDepth",
+                objectIDManager,
                 "Bit depth",
                 0,
                 8,
@@ -15,7 +15,7 @@ class BitCrusher extends Effect {
                 0
             ),
             targetSampleRate: new NumericalParameter(
-                "targetSampleRate",
+                objectIDManager,
                 "Sample rate",
                 20,
                 20000,
@@ -23,7 +23,7 @@ class BitCrusher extends Effect {
                 0
             ),
             bitCrushBias: new NumericalParameter(
-                "bitCrushBias",
+                objectIDManager,
                 "Bit crush bias",
                 -2,
                 2,

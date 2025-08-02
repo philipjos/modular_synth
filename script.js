@@ -81,6 +81,8 @@ var availableOscillatos = [OscillatorProper, Noise]
 var availableEffects = [Distortion, Delay, Volume, Syncifier, Compressor, BitCrusher, PulseWidth]
 var availableOtherDevices = [EnvelopeFollower]
 
+const objectIDManager = new ObjectIDManager()
+
 function getUnscaledSliderValue(value) {
 	return value / 1000
 }
@@ -263,7 +265,6 @@ function calculateBuffer(length, scale) {
 	}
 
 	for (let i = 0; i < length; i++) {
-		//console.log("calculate step")
 		let output = 0
 		let output_new = 0
 
@@ -2323,7 +2324,7 @@ function onAddDeviceClicked(deviceType) {
 }
 
 function addDevice(deviceType) {
-	const device = new deviceType()
+	const device = new deviceType(objectIDManager)
 	device.setOnDeviceChanged(onDeviceChanged)
 
 	let deviceArray = getDeviceArrayForDevice(device)

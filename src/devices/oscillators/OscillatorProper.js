@@ -2,12 +2,12 @@ class OscillatorProper extends Oscillator {
     static typeId = "oscillator_proper"
     static typeDisplayName = "Oscillator"
 
-    constructor(sampleRate) {
-        super(sampleRate)
+    constructor(objectIDManager, sampleRate) {
+        super(objectIDManager, sampleRate)
 
         this.setParametersAndSetup({
             frequency: new NumericalParameter(
-                "frequency",
+                objectIDManager,
                 "Frequency",
                 0,
                 2000,
@@ -15,7 +15,7 @@ class OscillatorProper extends Oscillator {
                 0
             ),
             amplitude: new NumericalParameter(
-                "amplitude",
+                objectIDManager,
                 "Amplitude",
                 0,
                 1,
@@ -23,7 +23,7 @@ class OscillatorProper extends Oscillator {
                 0
             ),
             phase: new NumericalParameter(
-                "phase",
+                objectIDManager,
                 "Phase",
                 0,
                 360,
@@ -31,7 +31,7 @@ class OscillatorProper extends Oscillator {
                 0
             ),
             shape: new SelectionParameter(
-                "shape",
+                objectIDManager,
                 "Shape",
                 [
                     {
@@ -53,7 +53,7 @@ class OscillatorProper extends Oscillator {
                 ]
             ),
             partials: new NumericalParameter(
-                "partials",
+                objectIDManager,
                 "Partials",
                 1,
                 35,
@@ -61,7 +61,7 @@ class OscillatorProper extends Oscillator {
                 0
             ),
             sync: new NumericalParameter(
-                "sync",
+                objectIDManager,
                 "Sync",
                 1,
                 16,
@@ -69,7 +69,7 @@ class OscillatorProper extends Oscillator {
                 0
             ),
             syncPhase: new NumericalParameter(
-                "syncPhase",
+                objectIDManager,
                 "Sync phase",
                 0,
                 360,

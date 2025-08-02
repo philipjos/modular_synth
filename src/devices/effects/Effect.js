@@ -2,11 +2,11 @@ class Effect extends OutputDevice {
     static typeDisplayName = "Effect"
     static typeId = "effect"
 
-    constructor() {
-        super()
+    constructor(objectIDManager) {
+        super(objectIDManager)
 
         this.input = new NumericalParameter(
-            "input",
+            objectIDManager,
             "Input",
             -1,
             1,

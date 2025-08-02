@@ -2,14 +2,14 @@ class EnvelopeFollower extends OtherDevice {
     static typeDisplayName = "Envelope follower"
     static typeId = "envelope_follower"
 
-    constructor() {
-        super();
+    constructor(objectIDManager) {
+        super(objectIDManager);
         this.minFrequency = 20
         this.memory = [];
 
         this.setParametersAndSetup({
             bias: new SelectionParameter(
-                "bias",
+                objectIDManager,
                 "Bias",
                 [
                     {
@@ -23,7 +23,7 @@ class EnvelopeFollower extends OtherDevice {
                 ]
             ),
             attack: new NumericalParameter(
-                "attack",
+                objectIDManager,
                 "Attack",
                 0,
                 2000,
@@ -31,7 +31,7 @@ class EnvelopeFollower extends OtherDevice {
                 0
             ),
             slopeMode: new SelectionParameter(
-                "slopeMode",
+                objectIDManager,
                 "Slope mode",
                 [
                     {
@@ -45,7 +45,7 @@ class EnvelopeFollower extends OtherDevice {
                 ]
             ),
             sensitivityThreshold: new NumericalParameter(
-                "sensitivityThreshold",
+                objectIDManager,
                 "Sensitivity threshold",
                 0,
                 1,
@@ -55,7 +55,7 @@ class EnvelopeFollower extends OtherDevice {
         })
 
         this.input = new NumericalParameter(
-            "input",
+            objectIDManager,
             "Input",
             -1,
             1,

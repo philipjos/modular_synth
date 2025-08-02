@@ -1,6 +1,6 @@
 class OutputDevice extends Device {
-    constructor() {
-        super()
+    constructor(objectIDManager) {
+        super(objectIDManager)
         this.lastOutput = 0
         this.goesToMainOutput = true
 

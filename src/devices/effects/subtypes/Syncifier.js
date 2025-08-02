@@ -2,14 +2,14 @@ class Syncifier extends Effect {
     static typeDisplayName = "Syncifier"
     static typeId = "syncifier"
 
-    constructor(sampleRate) {
-        super()
+    constructor(objectIDManager, sampleRate) {
+        super(objectIDManager)
 
         this.sampleRate = sampleRate
 
         this.setParametersAndSetup({
             origin: new NumericalParameter(
-                "origin",
+                objectIDManager,
                 "Origin",
                 0.1,
                 2000,
@@ -17,7 +17,7 @@ class Syncifier extends Effect {
                 0
             ),
             sync: new NumericalParameter(
-                "sync",
+                objectIDManager,
                 "Sync",
                 0.1,
                 4,

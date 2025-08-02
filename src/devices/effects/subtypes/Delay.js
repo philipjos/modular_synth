@@ -2,13 +2,13 @@ class Delay extends Effect {
     static typeDisplayName = "Delay"
     static typeId = "delay"
 
-    constructor(sampleRate) {      
-        super()  
+    constructor(objectIDManager, sampleRate) {      
+        super(objectIDManager)  
         this.sampleRate = sampleRate
         this.memory = []
         this.setParametersAndSetup({
             time: new NumericalParameter(
-                "time",
+                objectIDManager,
                 "Time",
                 0,
                 0.5,
@@ -16,7 +16,7 @@ class Delay extends Effect {
                 0
             ),
             feedback: new NumericalParameter(
-                "feedback",
+                objectIDManager,
                 "Feedback",
                 0,
                 100,

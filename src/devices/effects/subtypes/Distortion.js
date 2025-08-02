@@ -2,12 +2,12 @@ class Distortion extends Effect {
     static typeDisplayName = "Distortion"
     static typeId = "distortion"
 
-    constructor() {
-        super()
+    constructor(objectIDManager) {
+        super(objectIDManager)
 
         this.setParametersAndSetup({
             gain: new NumericalParameter(
-                "gain",
+                objectIDManager,
                 "Gain",
                 1,
                 10,

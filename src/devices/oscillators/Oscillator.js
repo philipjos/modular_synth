@@ -1,6 +1,6 @@
 class Oscillator extends OutputDevice {
-    constructor() {
-        super()
+    constructor(objectIDManager) {
+        super(objectIDManager)
 
         this.timedSignals["mainTime"] = new TimedSignal()
     }

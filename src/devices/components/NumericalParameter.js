@@ -1,13 +1,13 @@
 class NumericalParameter extends Parameter {
     constructor(
-        id,
+        objectIDManager,
         displayName,
         min,
         max,
         defaultValue,
         step
     ) {
-        super(id, displayName, min, max, defaultValue)
+        super(objectIDManager, displayName, min, max, defaultValue)
         this.step = step
 
         this.setupSubClassView()

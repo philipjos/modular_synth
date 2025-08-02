@@ -1,15 +1,15 @@
-class Parameter extends View {
+class Parameter extends ViewWithID {
     
     constructor(
-        id,
+        objectIDManager,
         displayName,
         min = 0, 
         max = 100, 
         defaultValue = null,
         modulatable = true
     ) {
-        super()
-        this.id = id
+        super(objectIDManager)
+        
         this.displayName = displayName
         this.modulatable = modulatable
         this.externalOnChange = () => {}
@@ -17,7 +17,7 @@ class Parameter extends View {
         this.setupView()
 
         this.modulationDelta = 0
-        this.min = min
+        this.min = min      
         this.max = max
         this.updateRangeDerivedValue()
         this.updateMiddleDerivedValue()

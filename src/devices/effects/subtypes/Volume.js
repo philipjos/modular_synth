@@ -2,12 +2,12 @@ class Volume extends Effect {
     static typeDisplayName = "Volume"
     static typeId = "volume"
 
-    constructor() {
-        super()
+    constructor(objectIDManager) {
+        super(objectIDManager)
 
         this.setParametersAndSetup({
             volume: new NumericalParameter(
-                "volume",
+                objectIDManager,
                 "Volume",
                 0,
                 1,

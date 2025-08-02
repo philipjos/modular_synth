@@ -2,12 +2,12 @@ class Noise extends Oscillator {
     static typeDisplayName = "Noise"
     static typeId = "noise"
 
-    constructor() {
-        super()
+    constructor(objectIDManager) {
+        super(objectIDManager)
 
         this.setParametersAndSetup({
             amplitude: new NumericalParameter(
-                "amplitude",
+                objectIDManager,
                 "Amplitude",
                 0,
                 1,
@@ -15,7 +15,7 @@ class Noise extends Oscillator {
                 0
             ),
             rate: new NumericalParameter(
-                "rate",
+                objectIDManager,
                 "Rate",
                 20,
                 20000,

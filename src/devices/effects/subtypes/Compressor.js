@@ -2,13 +2,13 @@ class Compressor extends Effect {
     static typeDisplayName = "Compressor"
     static typeId = "compressor"
 
-    constructor(sampleRate) {      
-        super()  
+    constructor(objectIDManager, sampleRate) {      
+        super(objectIDManager)  
         this.sampleRate = sampleRate
         this.memory = []
         this.setParametersAndSetup({
             threshold: new NumericalParameter(
-                "threshold",
+                objectIDManager,
                 "Threshold",
                 0,
                 2,
@@ -16,7 +16,7 @@ class Compressor extends Effect {
                 0
             ),
             ratio: new NumericalParameter(
-                "ratio",
+                objectIDManager,
                 "Ratio",
                 1,
                 10,
@@ -24,7 +24,7 @@ class Compressor extends Effect {
                 0
             ),
             attack: new NumericalParameter(
-                "attack",
+                objectIDManager,
                 "Attack",
                 0,
                 1000,
@@ -32,7 +32,7 @@ class Compressor extends Effect {
                 0
             ),
             release: new NumericalParameter(
-                "release",
+                objectIDManager,
                 "Release",
                 1,
                 2000,

@@ -2,12 +2,12 @@ class PulseWidth extends Effect {
     static typeDisplayName = "Pulse Width"
     static typeId = "pulseWidth"
 
-    constructor() {
-        super()
+    constructor(objectIDManager) {
+        super(objectIDManager)
 
         this.setParametersAndSetup({
             pulseWidth: new NumericalParameter(
-                "pulseWidth",
+                objectIDManager,
                 "Pulse Width",
                 0,
                 1,
@@ -15,7 +15,7 @@ class PulseWidth extends Effect {
                 0
             ),
             frequency: new NumericalParameter(
-                "frequency",
+                objectIDManager,
                 "Frequency",
                 0,
                 2000,

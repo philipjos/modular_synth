@@ -1,11 +1,11 @@
-class Device extends View {
+class Device extends ViewWithID {
     static typeDisplayName = "Device"
     static typeId = "device"
 
     onDeletePressed = undefined
 
-    constructor() {
-        super()
+    constructor(objectIDManager) {
+        super(objectIDManager)
 
         this.displayName = ""
         this.timedSignals = {}
