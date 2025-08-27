@@ -132,9 +132,11 @@ class OscillatorProper extends Oscillator {
 
         const phaseScaled = this.parameters["phase"].getModulatedValue() / 360
 
+        
         if (this.timedSignals["mainTime"].x + phaseScaled >= 1) {
-            this.timedSignals["mainTime"].x = -phaseScaled
-            this.timedSignals["syncTime"].x = 0
+            const difference = (this.timedSignals["mainTime"].x + phaseScaled) - 1
+            this.timedSignals["mainTime"].x = difference - phaseScaled
+            this.timedSignals["syncTime"].x = difference * this.parameters["sync"].getModulatedValue()
         }
     }
 
