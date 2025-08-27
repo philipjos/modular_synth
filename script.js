@@ -2239,10 +2239,10 @@ const setSynthFromPresetObject = (presetObject) => {
 			}
 
 		if (device instanceof Connection) {
-			device.parameters.from.dropdown.value = presetDevice.parameters.from
-			device.parameters.to.dropdown.value = presetDevice.parameters.to
+			device.parameters.from.setValueFromIndex(presetDevice.parameters.from)
+			device.parameters.to.setValueFromIndex(presetDevice.parameters.to)
 			device.updateParameterSelector()
-			device.parameters.parameter.dropdown.value = presetDevice.parameters.parameter
+			device.parameters.parameter.setValueFromIndex(presetDevice.parameters.parameter)
 		}
 	}
 

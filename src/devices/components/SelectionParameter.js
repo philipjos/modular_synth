@@ -79,10 +79,6 @@ class SelectionParameter extends Parameter {
         }
     }
 
-    getPresetValue() {
-        return this.dropdown.value
-    }
-
     getModulatedValue() {
         return Math.floor(super.getModulatedValue())
     }
