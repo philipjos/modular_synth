@@ -11,7 +11,7 @@ class BitCrusher extends Effect {
                 "Bit depth",
                 0,
                 8,
-                4,
+                2.32192809489,
                 0
             ),
             targetSampleRate: new NumericalParameter(
