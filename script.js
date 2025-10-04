@@ -11,6 +11,7 @@ let playingVolume = 0
 let playingEnvelopeAttack = 0.02
 let playingEnvelopeRelease = 0.1
 let playingEnvelopeState = "steady"
+let duration = 1
 
 var oscillators_old = []
 var connections_old = [] 
@@ -77,6 +78,12 @@ const objectIDManager = new ObjectIDManager()
 
 function getUnscaledSliderValue(value) {
 	return value / 1000
+}
+
+function getScaledDurationValue(value) {
+	const min = 0.2
+	const max = 10
+	return value * (max - min) + min
 }
 
 function getScaledFrequency(value) {
@@ -505,7 +512,6 @@ function play() {
 	const volume = 1;
 	const volumeSafeScale = 0.1;
 	const safetyHardClip = 1;
-	const duration = 1;
 	const sampleRate = audioCtx.sampleRate;
 	const length = sampleRate * duration;
 
@@ -1940,6 +1946,10 @@ function updateMainVolumeSliderFromModel() {
 
 const onMainVolumeChanged = (event) => {
 	mainVolume = getUnscaledSliderValue(event.target.value)
+}
+
+function onDurationChanged(event) {
+	duration = getScaledDurationValue(getUnscaledSliderValue(event.target.value))
 }
 
 function dropdownClicked(event, dropdown_id) {

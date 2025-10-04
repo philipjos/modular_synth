@@ -22,6 +22,21 @@
                 onInput="onMainVolumeChanged(event)"
             />
         </div>
+        <div class="duration-section">
+            <div class="center-text text">
+                Duration
+            </div>
+            <input
+                id="duration-slider"
+                type="range"
+                min="0"
+                max="1000"
+                step="1"
+                value="250"
+                class="duration-slider"
+                onInput="onDurationChanged(event)"
+            />
+        </div>
         <div id="oscilloscope-container">
         </div>
         <div class="actions-section">
