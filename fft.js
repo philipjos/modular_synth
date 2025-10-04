@@ -76,3 +76,8 @@ function loudestHarmonics(harmonics, count) {
 function loudestHarmonicsOfFFT(_fft, sampleRate, count) {
     return loudestHarmonics(toHarmonicObject(_fft, sampleRate), count);
 }
+
+function getHarmonicsFromAudioData(audioData, sampleRate, count) {
+    const _fft = fft(audioData)
+    return loudestHarmonicsOfFFT(_fft, sampleRate, count);
+}

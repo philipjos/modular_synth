@@ -29,8 +29,8 @@ var dropdownStates = {}
 
 var availablePinnedDevices = [Connection]
 var availableOscillatos = [OscillatorProper, Noise]
-var availableEffects = [Distortion, Delay, Volume, Syncifier, BitCrusher, PulseWidth]
-var availableOtherDevices = [EnvelopeFollower]
+var availableEffects = [Distortion, Delay, Volume, Syncifier, BitCrusher, PulseWidth, FrequencyFade]
+var availableOtherDevices = [Envelope, EnvelopeFollower]
 
 const objectIDManager = new ObjectIDManager()
 
