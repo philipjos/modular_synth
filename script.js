@@ -9,6 +9,11 @@ let playingEnvelopeAttack = 0.02
 let playingEnvelopeRelease = 0.1
 let playingEnvelopeState = "steady"
 
+// Continuous audio variables
+let audioContext = null
+let audioWorkletNode = null
+let isPlaying = false
+
 var oscillators = []
 var connections = []
 var effects = []
@@ -86,8 +91,8 @@ function calculateBuffer(length, scale) {
 }
 
 function updateOscilloscope() {
+	// For continuous audio, we'll calculate a snapshot buffer for visualization
 	let outputBuffer = calculateBuffer(oscilloscopeWidth, pixelsPerSecond)
-
 	oscilloscope.updateFromBuffer(outputBuffer)
 }
 
@@ -96,60 +101,220 @@ function onKeyDown(event) {
 }
 
 function triggerPlay() {
-	playingEnvelopeState = "attack"
 	play()
 }
 
-function play() {
-	const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-	const volume = 1;
-	const volumeSafeScale = 0.1;
-	const safetyHardClip = 1;
-	const duration = 1;
-	const sampleRate = audioCtx.sampleRate;
-	const length = sampleRate * duration;
-
-	const buffer = audioCtx.createBuffer(1, length, sampleRate);
-
-	const data = buffer.getChannelData(0);
-
-	const calculatedBuffer = calculateBuffer(length, sampleRate)
-
-	for (let i = 0; i < length; i++) {
-		let releaseScaled = playingEnvelopeRelease * sampleRate
-		if (i >= length - releaseScaled) {
-			playingEnvelopeState = "release"
-		}
-
-		if (playingEnvelopeState === "attack") {
-			playingVolume += 1 / (sampleRate * playingEnvelopeAttack)
-		} else if (playingEnvelopeState === "release") {
-			playingVolume -= 1 / (sampleRate * playingEnvelopeRelease)
-		}
-		if (playingVolume <= 0) {
-			playingVolume = 0
-			playingEnvelopeState = "steady"
-		} else if (playingVolume >= 1) {
-			playingVolume = 1
-			playingEnvelopeState = "steady"
-		}
-
-		data[i] = Math.max(
-			-safetyHardClip, 
-			Math.min(
-				safetyHardClip, 
-				calculatedBuffer[i] * volume * playingVolume * volumeSafeScale * mainVolume
-			)
-		);
+async function initializeAudioContext() {
+	if (!audioContext) {
+		audioContext = new (window.AudioContext || window.webkitAudioContext)();
+		
+		// Load the AudioWorklet module
+		await audioContext.audioWorklet.addModule('./audio-processor.js');
 	}
+	
+	// Create worklet node if it doesn't exist
+	if (!audioWorkletNode) {
+		audioWorkletNode = new AudioWorkletNode(audioContext, 'modular-synth-processor');
+	}
+}
 
-	const source = audioCtx.createBufferSource();
-	source.buffer = buffer;
+async function play() {
+	if (isPlaying) {
+		stopPlayback();
+		return;
+	}
+	
+	console.log('Starting audio playback...');
+	
+	await initializeAudioContext();
+	
+	// Resume audio context if suspended
+	if (audioContext.state === 'suspended') {
+		console.log('Resuming suspended audio context...');
+		await audioContext.resume();
+	}
+	
+	console.log('Audio context state:', audioContext.state);
+	
+	// Connect the worklet to destination
+	audioWorkletNode.connect(audioContext.destination);
+	
+	// Update the worklet with current synth data
+	updateAudioWorkletData();
+	
+	// Start playing
+	isPlaying = true;
+	playingEnvelopeState = "attack";
+	
+	// Update play button
+	updatePlayButton();
+	
+	// Start periodic oscilloscope updates
+	startOscilloscopeUpdates();
+	
+	console.log('Audio playback started');
+}
 
-	source.connect(audioCtx.destination);
+function stopPlayback() {
+	if (audioWorkletNode) {
+		audioWorkletNode.disconnect();
+		// Don't set to null - keep the worklet node for reuse
+	}
+	isPlaying = false;
+	playingEnvelopeState = "steady";
+	playingVolume = 0;
+	
+	// Update play button
+	updatePlayButton();
+	
+	// Stop oscilloscope updates
+	stopOscilloscopeUpdates();
+}
 
-	source.start(audioCtx.currentTime);
+let oscilloscopeUpdateInterval = null;
+
+function startOscilloscopeUpdates() {
+	// Update oscilloscope every 50ms for smooth visualization
+	oscilloscopeUpdateInterval = setInterval(() => {
+		if (isPlaying) {
+			updateOscilloscope();
+		}
+	}, 50);
+}
+
+function stopOscilloscopeUpdates() {
+	if (oscilloscopeUpdateInterval) {
+		clearInterval(oscilloscopeUpdateInterval);
+		oscilloscopeUpdateInterval = null;
+	}
+}
+
+function updatePlayButton() {
+	const playButton = document.querySelector('button[onClick="triggerPlay()"]');
+	if (playButton) {
+		playButton.innerHTML = isPlaying ? "⏹️" : "▶️";
+	}
+}
+
+function updateAudioWorkletData() {
+	if (!audioWorkletNode) return;
+	
+	// Convert devices to serializable format for the worklet
+	const serializedOscillators = oscillators.map(device => ({
+		id: device.id,
+		typeId: device.constructor.typeId,
+		parameters: serializeParameters(device.parameters),
+		timedSignals: serializeTimedSignals(device.timedSignals),
+		goesToMainOutput: device.goesToMainOutput,
+		lastOutput: device.lastOutput || 0,
+		calculation: serializeDeviceCalculation(device)
+	}));
+	
+	const serializedEffects = effects.map(device => ({
+		id: device.id,
+		typeId: device.constructor.typeId,
+		parameters: serializeParameters(device.parameters),
+		timedSignals: serializeTimedSignals(device.timedSignals),
+		goesToMainOutput: device.goesToMainOutput,
+		lastOutput: device.lastOutput || 0,
+		calculation: serializeDeviceCalculation(device)
+	}));
+	
+	const serializedOtherDevices = otherDevices.map(device => ({
+		id: device.id,
+		typeId: device.constructor.typeId,
+		parameters: serializeParameters(device.parameters),
+		timedSignals: serializeTimedSignals(device.timedSignals),
+		goesToMainOutput: device.goesToMainOutput,
+		lastOutput: device.lastOutput || 0,
+		calculation: serializeDeviceCalculation(device)
+	}));
+	
+	const serializedConnections = connections.map(connection => ({
+		from: connection.parameters.from.getSelectedObject()?.id,
+		to: connection.parameters.to.getSelectedObject()?.id,
+		parameter: connection.parameters.parameter.getSelectedObject()?.displayName,
+		amount: parseFloat(connection.parameters.amount.value)
+	}));
+	
+	const synthData = {
+		oscillators: serializedOscillators,
+		effects: serializedEffects,
+		otherDevices: serializedOtherDevices,
+		connections: serializedConnections,
+		mainVolume: mainVolume,
+		sampleRate: audioContext.sampleRate
+	};
+	
+	audioWorkletNode.port.postMessage({
+		type: 'updateSynth',
+		data: synthData
+	});
+}
+
+function serializeParameters(parameters) {
+	const serialized = {};
+	for (let key in parameters) {
+		const param = parameters[key];
+		serialized[key] = {
+			value: param.value,
+			min: param.min,
+			max: param.max,
+			rangeDerivedValue: param.rangeDerivedValue,
+			modulationDelta: param.modulationDelta || 0
+		};
+	}
+	return serialized;
+}
+
+// Device calculation registry - maps device types to their calculation functions
+// This allows the AudioWorklet to use polymorphic device calculations
+const deviceCalculationRegistry = new Map();
+
+function registerDeviceCalculation(deviceType, calculationFunction) {
+	deviceCalculationRegistry.set(deviceType, calculationFunction);
+}
+
+// To add a new device type for continuous audio:
+// 1. Copy the calculateOutput method from your device class
+// 2. Replace parameter.getModulatedValue() calls with getModulatedValue(parameter)
+// 3. Register it using: registerDeviceCalculation('your_type_id', function(device, getModulatedValue) { ... });
+
+function serializeDeviceCalculation(device) {
+	const deviceType = device.constructor.typeId;
+	const calculationFunction = deviceCalculationRegistry.get(deviceType);
+	
+	if (calculationFunction) {
+		// Convert function to string and extract just the function body
+		const functionString = calculationFunction.toString();
+		// Remove the function declaration part and keep only the body
+		const bodyStart = functionString.indexOf('{') + 1;
+		const bodyEnd = functionString.lastIndexOf('}');
+		const functionBody = functionString.substring(bodyStart, bodyEnd).trim();
+		
+		return {
+			type: deviceType,
+			calculateOutput: functionBody
+		};
+	}
+	
+	// Fallback for unregistered device types
+	return {
+		type: deviceType,
+		calculateOutput: 'return 0;'
+	};
+}
+
+function serializeTimedSignals(timedSignals) {
+	const serialized = {};
+	for (let key in timedSignals) {
+		const signal = timedSignals[key];
+		serialized[key] = {
+			x: signal.x,
+			stepSize: signal.stepSize
+		};
+	}
+	return serialized;
 }
 
 function resetDevicesForBufferCalculation(scale) {
@@ -474,6 +639,9 @@ function getNonConnectionDevices() {
 
 function onDeviceChanged() {
 	updateOscilloscope();
+	if (isPlaying) {
+		updateAudioWorkletData();
+	}
 }
 
 const availableDeviceTypes = getAvailableDeviceTypes()
@@ -490,6 +658,76 @@ for (let i = 0; i < availableDeviceTypes.length; i++) {
 	})
 	devicesDropdown.appendChild(deviceDropdownItem)
 }
+
+// Register device calculation functions for AudioWorklet
+// These functions mirror the calculateOutput methods from the device classes
+// but are adapted to work with the serialized device data in the AudioWorklet
+
+registerDeviceCalculation('oscillator_proper', function(device, getModulatedValue) {
+	// This mirrors the OscillatorProper.calculateOutput() method
+	let output = 0;
+	
+	// Handle phase wrapping for mainTime
+	let mainTimeX = device.timedSignals.mainTime.x;
+	const phaseScaled = getModulatedValue(device.parameters.phase) / 360;
+	
+	if (mainTimeX + phaseScaled >= 1) {
+		const difference = (mainTimeX + phaseScaled) - 1;
+		mainTimeX = difference - phaseScaled;
+		device.timedSignals.mainTime.x = mainTimeX;
+		device.timedSignals.syncTime.x = difference * getModulatedValue(device.parameters.sync);
+	}
+	
+	const phasedX = device.timedSignals.syncTime.x * 2 * Math.PI + 
+				   getModulatedValue(device.parameters.syncPhase) * Math.PI / 180;
+
+	if (getModulatedValue(device.parameters.shape) == 0) {
+		output = Math.sin(phasedX);
+	} else {
+		const partials = Math.floor(getModulatedValue(device.parameters.partials));
+		
+		for (let i = 1; i <= partials; i++) {
+			let partialFrequency = 1;
+			let partialAmplitude = 1;
+
+			switch (getModulatedValue(device.parameters.shape)) {
+				case 1: // Square
+					partialFrequency = 2 * i - 1;
+					partialAmplitude = 4 / (Math.PI * partialFrequency);
+					break;
+				case 2: // Triangle
+					partialFrequency = 2 * i - 1;
+					partialAmplitude = -8 * Math.pow(-1, i) / (Math.pow(Math.PI, 2) * Math.pow(partialFrequency, 2));
+					break;
+				case 3: // Sawtooth
+					partialFrequency = i;
+					partialAmplitude = 2 / (Math.PI * partialFrequency);
+			}
+			
+			const partialX = phasedX * partialFrequency;
+			const partialOutput = Math.sin(partialX) * partialAmplitude;
+			output += partialOutput;
+		}
+	}
+
+	return output * getModulatedValue(device.parameters.amplitude);
+});
+
+registerDeviceCalculation('noise', function(device, getModulatedValue) {
+	// This mirrors the Noise.calculateOutput() method
+	const amplitude = getModulatedValue(device.parameters.amplitude);
+	const rate = getModulatedValue(device.parameters.rate);
+	const time = device.timedSignals.mainTime.x;
+	const periodInSamples = device.sampleRate / rate;
+
+	let output = device.lastOutput || 0;
+	if (time - (device.lastSamplePoint || -1) >= periodInSamples) {
+		output = (Math.random() * 2 - 1) * amplitude;
+		device.lastSamplePoint = time;
+	}
+
+	return output;
+});
 
 addTapOutHandler()
 oscilloscope.appendToView(oscilloscopeContainer);
