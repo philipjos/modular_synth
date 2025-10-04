@@ -481,11 +481,17 @@ function updateOscilloscope() {
 }
 
 function onKeyDown(event) {
-	triggerPlay()
+	if (!this.isPlaying) {
+		this.isPlaying = true
+		triggerPlay()
+	}
 }
 
 function onKeyUp(event) {
-	source.stop()
+	if (this.isPlaying) {
+		this.source.stop()
+		this.isPlaying = false
+	}
 }
 
 function triggerPlay() {
@@ -538,6 +544,7 @@ function play() {
 	}
 
 	const source = audioCtx.createBufferSource();
+	this.source = source
 	source.buffer = buffer;
 
 	source.connect(audioCtx.destination);
