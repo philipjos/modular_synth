@@ -484,6 +484,10 @@ function onKeyDown(event) {
 	triggerPlay()
 }
 
+function onKeyUp(event) {
+	source.stop()
+}
+
 function triggerPlay() {
 	playingEnvelopeState = "attack"
 	play()
