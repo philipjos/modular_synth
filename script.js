@@ -315,8 +315,8 @@ const setSynthFromPresetObject = (presetObject) => {
 
 	let devices = presetObject.oscillators
 		.concat(presetObject.effects)
-		.concat(presetObject.connections)
 		.concat(presetObject.otherDevices)
+		.concat(presetObject.connections)
 
 	for (let presetDevice of devices) {
 		let deviceType = findDeviceTypeWithId(presetDevice.typeId)

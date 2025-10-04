@@ -53,14 +53,16 @@ class Envelope extends OtherDevice {
         let attack = this.parameters.attack.getModulatedValue()
         let decay = this.parameters.decay.getModulatedValue()
         let sustain = this.parameters.sustain.getModulatedValue()
-        let output = 0
+        let unipolar = 0
         if (timeInSeconds < attack) {
-            output = timeInSeconds / attack
+            unipolar = (timeInSeconds / attack)
         } else if (timeInSeconds < attack + decay) {
-            output = (1 - (timeInSeconds - attack) / decay) * (1 - sustain) + sustain
+            unipolar = (1 - (timeInSeconds - attack) / decay) * (1 - sustain) + sustain
         } else {
-            output = sustain
+            unipolar = sustain
         }
+        let output = unipolar * 2 - 1
+
         return output
     }
 }

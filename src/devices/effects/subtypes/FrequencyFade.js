@@ -154,8 +154,8 @@ class FrequencyFade extends Effect {
                 if (indexOfNearest < (partials - 1)) {
                     for (let i = indexOfNearest + 1; i < partials; i++) {
                         output += this.getFadedPartialOutput(
-                            partialA,
-                            partialB, 
+                            frequencySorted[partials - 1],
+                            frequencySortedB[i], 
                             inverseBalance,
                             balance
                         )
