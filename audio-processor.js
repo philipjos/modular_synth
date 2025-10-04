@@ -8,7 +8,7 @@ class ModularSynthProcessor extends AudioWorkletProcessor {
             }
         };
         this.synthData = null;
-        this.sampleIndex = 0;
+        this.globalTime = 0; // Global time counter that persists across buffers
     }
 
     process(inputs, outputs, parameters) {
@@ -24,12 +24,15 @@ class ModularSynthProcessor extends AudioWorkletProcessor {
         const { oscillators, connections, effects, otherDevices, mainVolume, sampleRate } = this.synthData;
         
         // Debug: Log first few samples to see if we're getting data
-        if (this.sampleIndex < 10) {
-            console.log('AudioWorklet processing, sample:', this.sampleIndex, 'oscillators:', oscillators.length);
+        if (this.globalTime < 10) {
+            console.log('AudioWorklet processing, globalTime:', this.globalTime, 'oscillators:', oscillators.length);
         }
         
-        // Reset devices for this buffer calculation
-        this.resetDevicesForBufferCalculation(oscillators, effects, otherDevices, sampleRate);
+        // Only reset devices on first buffer or when synth data changes
+        if (!this.lastSynthData || this.lastSynthData !== this.synthData) {
+            this.resetDevicesForBufferCalculation(oscillators, effects, otherDevices, sampleRate);
+            this.lastSynthData = this.synthData;
+        }
         
         for (let i = 0; i < outputChannel.length; i++) {
             let outputValue = 0;
@@ -63,7 +66,7 @@ class ModularSynthProcessor extends AudioWorkletProcessor {
                     outputValue += deviceOutput;
                     
                     // Debug: Log first few device outputs
-                    if (this.sampleIndex < 5 && i < 5) {
+                    if (this.globalTime < 5 && i < 5) {
                         console.log('Device output:', device.typeId, deviceOutput);
                     }
                 }
@@ -71,7 +74,7 @@ class ModularSynthProcessor extends AudioWorkletProcessor {
             
             // Apply main volume and safety clipping
             outputChannel[i] = Math.max(-1, Math.min(1, outputValue * mainVolume * 0.1));
-            this.sampleIndex++;
+            this.globalTime++;
         }
         
         return true;
@@ -81,8 +84,9 @@ class ModularSynthProcessor extends AudioWorkletProcessor {
         for (let device of [...oscillators, ...effects, ...otherDevices]) {
             device.sampleRate = sampleRate;
             this.resetForCalculations(device);
-            this.resetTimedSignals(device);
             this.setStepSizes(device, sampleRate);
+            // Reset timed signals to 0 for fresh start
+            this.resetTimedSignals(device);
             device.lastOutput = 0;
         }
     }
@@ -117,6 +121,7 @@ class ModularSynthProcessor extends AudioWorkletProcessor {
             }
         }
     }
+    
     
     advanceTime(device, scale) {
         if (device.timedSignals) {
