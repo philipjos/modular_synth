@@ -100,7 +100,7 @@ class Device extends ViewWithID {
     advanceTime(sampleRate) {
         for (let key in this.timedSignals) {
             const timedSignal = this.timedSignals[key]
-            timedSignal.x += timedSignal.stepSize
+            timedSignal.advanceTime()
         }
     }
 

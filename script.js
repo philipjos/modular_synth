@@ -4,19 +4,26 @@ let oscilloscopeHeight = 100
 let oscillatorWidthsPerSecond = 50
 let pixelsPerSecond = oscillatorWidthsPerSecond * oscilloscopeWidth
 
+let sliderResolution = 1000
+
 let playingVolume = 0
 let playingEnvelopeAttack = 0.02
 let playingEnvelopeRelease = 0.1
 let playingEnvelopeState = "steady"
-let duration = 1
+const defaultDuration = 2
+let durationScalableParameterType = new ScalableParameter(defaultDuration, 0.2, 10)
+let duration = defaultDuration
+let bounceSampleRate = 44100
+
+const defaultMainVolume = 0.75
+var mainVolume = defaultMainVolume;
+var mainVolumeScalableParameterType = new ScalableParameter(defaultMainVolume, 0, 1)
 
 var oscillators = []
 var connections = []
 var effects = []
 var otherDevices = []
 
-var mainVolume = 0.25;
-var mainVolumeScalableParameterType = new ScalableParameter(0.25, 0, 1)
 
 const oscilloscope = new Oscilloscope(oscilloscopeWidth, oscilloscopeHeight)
 const oscilloscopeContainer = document.getElementById("oscilloscope-container")
@@ -35,13 +42,25 @@ var availableOtherDevices = [Envelope, EnvelopeFollower]
 const objectIDManager = new ObjectIDManager()
 
 function getUnscaledSliderValue(value) {
-	return value / 1000
+	return value / sliderResolution
 }
 
 function getScaledDurationValue(value) {
-	const min = 0.2
-	const max = 10
-	return value * (max - min) + min
+	return value 
+			* 
+			(durationScalableParameterType.max 
+			- durationScalableParameterType.min
+			)
+			+ durationScalableParameterType.min
+}
+
+function getDurationSliderViewValue(scaledValue) {
+	return (scaledValue - durationScalableParameterType.min) / (durationScalableParameterType.max - durationScalableParameterType.min) * sliderResolution
+}
+
+function updateDurationSliderFromModel() {
+	const durationSlider = document.getElementById("duration-slider")
+	durationSlider.value = getDurationSliderViewValue(duration)
 }
 
 function calculateBuffer(length, scale) {
@@ -497,6 +516,85 @@ function onDeviceChanged() {
 	updateOscilloscope();
 }
 
+function floatTo16BitPCM(output, offset, input) {
+	for (let i = 0; i < input.length; i++, offset += 2) {
+		let s = Math.max(-1, Math.min(1, input[i]))
+		s = s < 0 ? s * 0x8000 : s * 0x7FFF
+		output.setInt16(offset, s, true)
+	}
+}
+
+function writeWAV(buffer, sampleRate) {
+	const numFrames = buffer.length
+	const numChannels = 1
+	const bytesPerSample = 2
+	const blockAlign = numChannels * bytesPerSample
+	const byteRate = sampleRate * blockAlign
+	const dataSize = numFrames * numChannels * bytesPerSample
+
+	const bufferSize = 44 + dataSize
+	const arrayBuffer = new ArrayBuffer(bufferSize)
+	const view = new DataView(arrayBuffer)
+
+	// "RIFF" chunk descriptor
+	view.setUint32(0, 0x52494646, false) // "RIFF"
+	view.setUint32(4, 36 + dataSize, true)
+	view.setUint32(8, 0x57415645, false) // "WAVE"
+
+	// "fmt " sub-chunk
+	view.setUint32(12, 0x666d7420, false) // "fmt "
+	view.setUint32(16, 16, true) // PCM chunk size
+	view.setUint16(20, 1, true) // PCM format
+	view.setUint16(22, numChannels, true)
+	view.setUint32(24, sampleRate, true)
+	view.setUint32(28, byteRate, true)
+	view.setUint16(32, blockAlign, true)
+	view.setUint16(34, bytesPerSample * 8, true)
+
+	// "data" sub-chunk
+	view.setUint32(36, 0x64617461, false) // "data"
+	view.setUint32(40, dataSize, true)
+
+	// Write PCM samples
+	floatTo16BitPCM(view, 44, buffer)
+
+	return arrayBuffer
+}
+
+function onBounceAudioClicked() {
+	const  calculatedBuffer = calculateBuffer(duration * bounceSampleRate, bounceSampleRate)
+	
+	// Apply the same volume scaling as the play() function
+	const volume = 1;
+	const volumeSafeScale = 0.1;
+	const safetyHardClip = 1;
+	const scaledBuffer = calculatedBuffer.map(sample => 
+		Math.max(
+			-safetyHardClip, 
+			Math.min(
+				safetyHardClip, 
+				sample * volume * volumeSafeScale * mainVolume
+			)
+		)
+	);
+
+	const wavBuffer = writeWAV(scaledBuffer, bounceSampleRate)
+
+	// Initiate download
+	const blob = new Blob([wavBuffer], { type: "audio/wav" })
+	const url = URL.createObjectURL(blob)
+	const a = document.createElement("a")
+	a.style.display = "none"
+	a.href = url
+	a.download = "Synth_bounce.wav"
+	document.body.appendChild(a)
+	a.click()
+	setTimeout(() => {
+		document.body.removeChild(a)
+		URL.revokeObjectURL(url)
+	}, 100)
+}
+
 const availableDeviceTypes = getAvailableDeviceTypes()
 const devicesDropdown = document.getElementsByClassName("dropdown-content")[0]
 
@@ -512,6 +610,8 @@ for (let i = 0; i < availableDeviceTypes.length; i++) {
 	devicesDropdown.appendChild(deviceDropdownItem)
 }
 
+updateDurationSliderFromModel()
+
 addTapOutHandler()
 oscilloscope.appendToView(oscilloscopeContainer);
 updateMainVolumeSliderFromModel();
@@ -519,3 +619,40 @@ addDevice(OscillatorProper)
 
 setTab(0);
 updateOscilloscope();
+
+// Test
+addDevice(OscillatorProper)
+addDevice(FrequencyFade)
+addDevice(Envelope)
+addDevice(Connection)
+addDevice(Connection)
+addDevice(Connection)
+
+oscillators[0].goesToMainOutput = false
+oscillators[1].goesToMainOutput = false
+
+effects[0].parameters["partials"].value = 4
+
+otherDevices[0].goesToMainOutput = false
+otherDevices[0].parameters["attack"].value = 0.5
+
+connections[0].parameters["from"].setValueFromIndex(0)
+connections[0].parameters["to"].setValueFromIndex(2)
+connections[0].updateParameterSelector()
+connections[0].parameters["parameter"].setValueFromIndex(3)
+connections[0].parameters["amount"].value = 1
+
+connections[1].parameters["from"].setValueFromIndex(1)
+connections[1].parameters["to"].setValueFromIndex(2)
+connections[1].updateParameterSelector()
+connections[1].parameters["parameter"].setValueFromIndex(4)
+connections[1].parameters["amount"].value = 1
+
+connections[2].parameters["from"].setValueFromIndex(3)
+connections[2].parameters["to"].setValueFromIndex(2)
+connections[2].updateParameterSelector()
+connections[2].parameters["parameter"].setValueFromIndex(1)
+connections[2].parameters["amount"].value = 1
+
+setTab(2)
+updateOscilloscope()

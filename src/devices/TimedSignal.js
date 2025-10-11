@@ -9,4 +9,8 @@ class TimedSignal {
         this.x = 0
         this.stepSize = this.initialStepSize
     }
+
+    advanceTime() {
+        this.x += this.stepSize
+    }
 }

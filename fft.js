@@ -77,7 +77,29 @@ function loudestHarmonicsOfFFT(_fft, sampleRate, count) {
     return loudestHarmonics(toHarmonicObject(_fft, sampleRate), count);
 }
 
-function getHarmonicsFromAudioData(audioData, sampleRate, count) {
+function getHarmonicsFromAudioData(audioData, sampleRate) {
     const _fft = fft(audioData)
-    return loudestHarmonicsOfFFT(_fft, sampleRate, count);
+    const firstHalfOfFft = _fft.slice(0, _fft.length / 2)
+    return toHarmonicObject(firstHalfOfFft, sampleRate);
+}
+
+function getLoudestHarmonicsFromAudioData(audioData, sampleRate, count) {
+    let output = []
+    for (let i = 0; i < count; i++) {
+        let partial = {}
+        partial.frequency = i * 220
+        partial.magnitude = 180
+        partial.phase = 0
+        output.push(partial)
+    }
+
+    console.log("output", output)
+
+    return output
+
+    // const _fft = fft(audioData)
+    // const firstHalfOfFft = _fft.slice(0, _fft.length / 2)
+    // const output = loudestHarmonicsOfFFT(firstHalfOfFft, sampleRate, count);
+    // console.log("output", output)
+    // return output
 }
