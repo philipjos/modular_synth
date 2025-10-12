@@ -42,10 +42,6 @@ class FrequencyFade extends Effect {
                 {
                     value: "amplitudeRank",
                     label: "Amplitude rank"
-                },
-                {
-                    value: "static",
-                    label: "Static"
                 }]
             )
         })
@@ -84,16 +80,22 @@ class FrequencyFade extends Effect {
         this.debug2 = true
         this.debug_3 = true
         this.debug_4 = 0
+        this.debug_5 = 0
 
         this.resetPhase()
     }
 
-    getFadedPartialOutput(partialA, partialB, inverseBalance, balance, angle) {
-        
-        let sourceCount = this.countForFrequency[Math.floor(partialA.frequency)]
-        let targetCount = this.countForFrequencyB[Math.floor(partialB.frequency)]
-        
-        let fadedAmplitude = partialA.magnitude / sourceCount * inverseBalance + partialB.magnitude / targetCount * balance
+    getFadedPartialOutput(partialA, partialB, inverseBalance, balance, angle, mode) {
+        var fadedAmplitude
+        if (mode == 0 || mode == 2) {
+            let sourceCount = this.countForFrequency[Math.floor(partialA.frequency)]
+            let targetCount = this.countForFrequencyB[Math.floor(partialB.frequency)]
+            
+            fadedAmplitude = partialA.magnitude / sourceCount * inverseBalance + partialB.magnitude / targetCount * balance
+        } else if (mode == 1 || mode == 3) {
+            fadedAmplitude = partialA.magnitude * inverseBalance + partialB.magnitude * balance
+        }
+
         let fadedPhase = partialA.phase * inverseBalance + partialB.phase * balance
         
         
@@ -101,13 +103,13 @@ class FrequencyFade extends Effect {
             angle
             * 2 * Math.PI
             + fadedPhase
-        ) * fadedAmplitude / 200
+        ) * fadedAmplitude
         
         if (this.debug_4 < 600) {
-            console.log("partialB", partialB )
-            console.log("balance", balance)
-            console.log("angle", angle)
-            console.log("Output", output)
+            // console.log("partialB", partialB )
+            // console.log("balance", balance)
+            // console.log("angle", angle)
+            // console.log("Output", output)
         }
 
         return output
@@ -142,7 +144,14 @@ class FrequencyFade extends Effect {
                     let j = 0
                     while (!matchHasBeenFound && j < this.fftResultB.length) {
                         let partialB = this.fftResultB[j]
-                        let difference = Math.abs(partialB.frequency - partialA.frequency)
+
+                        var difference
+                        if (mode == 0) {
+                            difference = Math.abs(partialB.frequency - partialA.frequency)
+                        } else if (mode == 2) {
+                            difference = Math.abs(partialB.magnitude - partialA.magnitude)
+                        }
+                        
                         if (smallestDifference === undefined || difference < smallestDifference) {
                             if (difference == 0) {
                                 matchHasBeenFound = true
@@ -194,7 +203,13 @@ class FrequencyFade extends Effect {
                         
                         let j = 0
                         while (j < partials) {
-                            let difference = Math.abs(this.fftResult[j].frequency - partialB.frequency)
+
+                            var difference
+                            if (mode == 0) {
+                                difference = Math.abs(this.fftResult[j].frequency - partialB.frequency)
+                            } else if (mode == 2) {
+                                difference = Math.abs(this.fftResult[j].magnitude - partialB.magnitude)
+                            }
 
                             if (smallestDifference === undefined || difference < smallestDifference) {
                                 smallestDifference = difference
@@ -257,6 +272,20 @@ class FrequencyFade extends Effect {
                     this.debug = false
                 }
 
+            } else if (mode == 1) {
+                for (let i = 0; i < this.fftResult.length; i++) {
+                    const partialA = this.fftResult[i]
+                    const partialB = this.fftResultB[i]
+
+                    const fadedFrequency = partialA.frequency * inverseBalance + partialB.frequency * balance
+                    const stepSize = fadedFrequency / this.sampleRate
+
+                    if (i < this.partialTimedSignals.length) {
+                        this.partialTimedSignals[i].stepSize = stepSize 
+                    } else {
+                        this.partialTimedSignals.push(new TimedSignal(stepSize))
+                    }
+                }
             }
         }
 
@@ -280,52 +309,68 @@ class FrequencyFade extends Effect {
         this.windowB.push(inputB)
 
         if (this.fftResult.length == 0 && this.window.length >= this.windowSize) {
-            if (mode == 4) {
-                this.fftResult = getHarmonicsFromAudioData(this.window, this.sampleRate)
-                this.fftResultB = getHarmonicsFromAudioData(this.windowB, this.sampleRate)
-            } else {
-                this.fftResult = getLoudestHarmonicsFromAudioData(this.window, this.sampleRate, partials)
-                this.fftResultB = getLoudestHarmonicsFromAudioData(this.windowB, this.sampleRate, partials)
-
-                if (this.debug_4 == 0) {
-                    console.log("this.fftResult", this.fftResult)
-                    console.log("this.fftResultB", this.fftResultB)
-                }
-            }
+            this.fftResult = getLoudestHarmonicsFromAudioData(this.window, this.sampleRate, partials)
+            this.fftResultB = getLoudestHarmonicsFromAudioData(this.windowB, this.sampleRate, partials)
 
             this.window = []
             this.windowB = []
             this.debug = true
         }
         if (this.fftResult.length >= partials) {
-            for (let i = 0; i < this.transitions.length; i++) {
 
-                if (this.debug_4 < 600) {
-                    console.log("i", i)
-                    console.log("this.transitions[i].source", this.transitions[i].source)
-                    console.log("this.transitions[i].target", this.transitions[i].target)
-                    console.log("inverseBalance", inverseBalance)
-                    console.log("balance", balance)
-                    console.log("this.partialTimedSignals[i].x", this.partialTimedSignals[i].x)
-                }
-
-                const partialOutput = this.getFadedPartialOutput(
-                    this.transitions[i].source,
-                    this.transitions[i].target,
-                    inverseBalance,
-                    balance,
-                    this.partialTimedSignals[i].x
-                )
-
-                if (this.debug_4 < 100) {
-                    //console.log("partialOutput", partialOutput)
-                }
-
-                output += partialOutput
+            if (mode == 1) {
+                this.fftResult = this.fftResult.sort((a, b) => a.frequency - b.frequency)
+                this.fftResultB = this.fftResultB.sort((a, b) => a.frequency - b.frequency)
             }
-            
-            if (this.debug_4 < 100 || (this.debug_4 < 1000 && output > 0.01)) {
-                //console.log("final output", output)
+
+            if (mode == 0 || mode == 2) {
+                for (let i = 0; i < this.transitions.length; i++) {
+
+                    // if (this.debug_4 < 600) {
+                    //     console.log("i", i)
+                    //     console.log("this.transitions[i].source", this.transitions[i].source)
+                    //     console.log("this.transitions[i].target", this.transitions[i].target)
+                    //     console.log("inverseBalance", inverseBalance)
+                    //     console.log("balance", balance)
+                    //     console.log("this.partialTimedSignals[i].x", this.partialTimedSignals[i].x)
+                    // }
+
+                    const partialOutput = this.getFadedPartialOutput(
+                        this.transitions[i].source,
+                        this.transitions[i].target,
+                        inverseBalance,
+                        balance,
+                        this.partialTimedSignals[i].x,
+                        mode
+                    )
+
+                    if (this.debug_4 < 100) {
+                        //console.log("partialOutput", partialOutput)
+                    }
+
+                    output += partialOutput
+                }
+                
+                if (this.debug_4 < 100 || (this.debug_4 < 1000 && output > 0.01)) {
+                    //console.log("final output", output)
+                }
+            } else if (mode == 1 || mode == 3) {
+                for (let i = 0; i < partials; i++) {
+                    const partialA = this.fftResult[i]
+                    const partialB = this.fftResultB[i]
+
+                    
+                    const partialOutput = this.getFadedPartialOutput(
+                        partialA,
+                        partialB,
+                        inverseBalance,
+                        balance,
+                        this.partialTimedSignals[i].x,
+                        mode
+                    )
+
+                    output += partialOutput
+                }
             }
         }
 

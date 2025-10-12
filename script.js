@@ -140,7 +140,6 @@ function play() {
 	const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 	const volume = 1;
-	const volumeSafeScale = 0.1;
 	const safetyHardClip = 1;
 	const sampleRate = audioCtx.sampleRate;
 	const length = sampleRate * duration;
@@ -174,7 +173,7 @@ function play() {
 			-safetyHardClip, 
 			Math.min(
 				safetyHardClip, 
-				calculatedBuffer[i] * volume * playingVolume * volumeSafeScale * mainVolume
+				calculatedBuffer[i] * volume * playingVolume * mainVolume
 			)
 		);
 	}
@@ -566,14 +565,13 @@ function onBounceAudioClicked() {
 	
 	// Apply the same volume scaling as the play() function
 	const volume = 1;
-	const volumeSafeScale = 0.1;
 	const safetyHardClip = 1;
 	const scaledBuffer = calculatedBuffer.map(sample => 
 		Math.max(
 			-safetyHardClip, 
 			Math.min(
 				safetyHardClip, 
-				sample * volume * volumeSafeScale * mainVolume
+				sample * volume * mainVolume
 			)
 		)
 	);
@@ -622,37 +620,69 @@ updateOscilloscope();
 
 // Test
 addDevice(OscillatorProper)
+addDevice(OscillatorProper)
+addDevice(OscillatorProper)
 addDevice(FrequencyFade)
 addDevice(Envelope)
+addDevice(Connection)
+addDevice(Connection)
 addDevice(Connection)
 addDevice(Connection)
 addDevice(Connection)
 
 oscillators[0].goesToMainOutput = false
 oscillators[1].goesToMainOutput = false
+oscillators[2].goesToMainOutput = false
+oscillators[3].goesToMainOutput = false
 
-effects[0].parameters["partials"].value = 4
+oscillators[0].parameters["amplitude"].value = 1
+oscillators[0].parameters["frequency"].value = 440
+
+oscillators[1].parameters["amplitude"].value = 1
+oscillators[1].parameters["frequency"].value = 700
+
+oscillators[2].parameters["amplitude"].value = 1
+oscillators[2].parameters["frequency"].value = 700
+
+oscillators[3].parameters["amplitude"].value = 1
+oscillators[3].parameters["frequency"].value = 3520
+
+
+effects[0].parameters["partials"].value = 2
+effects[0].parameters["mode"].setValueFromIndex(1)
 
 otherDevices[0].goesToMainOutput = false
 otherDevices[0].parameters["attack"].value = 0.5
 
 connections[0].parameters["from"].setValueFromIndex(0)
-connections[0].parameters["to"].setValueFromIndex(2)
+connections[0].parameters["to"].setValueFromIndex(4)
 connections[0].updateParameterSelector()
 connections[0].parameters["parameter"].setValueFromIndex(3)
 connections[0].parameters["amount"].value = 1
 
 connections[1].parameters["from"].setValueFromIndex(1)
-connections[1].parameters["to"].setValueFromIndex(2)
+connections[1].parameters["to"].setValueFromIndex(4)
 connections[1].updateParameterSelector()
-connections[1].parameters["parameter"].setValueFromIndex(4)
+connections[1].parameters["parameter"].setValueFromIndex(3)
 connections[1].parameters["amount"].value = 1
 
-connections[2].parameters["from"].setValueFromIndex(3)
-connections[2].parameters["to"].setValueFromIndex(2)
+connections[2].parameters["from"].setValueFromIndex(2)
+connections[2].parameters["to"].setValueFromIndex(4)
 connections[2].updateParameterSelector()
-connections[2].parameters["parameter"].setValueFromIndex(1)
+connections[2].parameters["parameter"].setValueFromIndex(4)
 connections[2].parameters["amount"].value = 1
+
+connections[3].parameters["from"].setValueFromIndex(3)
+connections[3].parameters["to"].setValueFromIndex(4)
+connections[3].updateParameterSelector()
+connections[3].parameters["parameter"].setValueFromIndex(4)
+connections[3].parameters["amount"].value = 1
+
+connections[4].parameters["from"].setValueFromIndex(5)
+connections[4].parameters["to"].setValueFromIndex(4)
+connections[4].updateParameterSelector()
+connections[4].parameters["parameter"].setValueFromIndex(1)
+connections[4].parameters["amount"].value = 1
 
 setTab(2)
 updateOscilloscope()
