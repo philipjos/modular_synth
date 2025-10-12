@@ -40,7 +40,7 @@ function fft_recursive(input) {
 }
 
 function magnitudes(_fft) {
-    return _fft.map(c => Math.sqrt(c.real * c.real + c.imaginary * c.imaginary));
+    return _fft.map(c => Math.sqrt(c.real * c.real + c.imaginary * c.imaginary) / _fft.length);
 }
 
 function phases(_fft) {
@@ -84,22 +84,9 @@ function getHarmonicsFromAudioData(audioData, sampleRate) {
 }
 
 function getLoudestHarmonicsFromAudioData(audioData, sampleRate, count) {
-    let output = []
-    for (let i = 0; i < count; i++) {
-        let partial = {}
-        partial.frequency = i * 220
-        partial.magnitude = 180
-        partial.phase = 0
-        output.push(partial)
-    }
-
+    const _fft = fft(audioData)
+    const relevant = _fft.slice(1, _fft.length / 2)
+    const output = loudestHarmonicsOfFFT(relevant, sampleRate, count);
     console.log("output", output)
-
     return output
-
-    // const _fft = fft(audioData)
-    // const firstHalfOfFft = _fft.slice(0, _fft.length / 2)
-    // const output = loudestHarmonicsOfFFT(firstHalfOfFft, sampleRate, count);
-    // console.log("output", output)
-    // return output
 }
