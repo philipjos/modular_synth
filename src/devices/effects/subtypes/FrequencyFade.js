@@ -105,12 +105,12 @@ class FrequencyFade extends Effect {
             + fadedPhase
         ) * fadedAmplitude
         
-        if (this.debug_4 < 600) {
-            // console.log("partialB", partialB )
-            // console.log("balance", balance)
-            // console.log("angle", angle)
-            // console.log("Output", output)
-        }
+        // if (this.debug_4 < 600) {
+        //     console.log("partialB", partialB )
+        //     console.log("balance", balance)
+        //     console.log("angle", angle)
+        //     console.log("Output", output)
+        // }
 
         return output
     }
@@ -128,7 +128,7 @@ class FrequencyFade extends Effect {
         const partials = Math.floor(this.parameters.partials.getModulatedValue())
 
         if (this.fftResult.length >= partials) {
-            if (mode == 0) {
+            if (mode == 0 || mode == 2) {
                 this.countForFrequency = {}
                 this.countForFrequencyB = {}
 
@@ -272,7 +272,14 @@ class FrequencyFade extends Effect {
                     this.debug = false
                 }
 
-            } else if (mode == 1) {
+            } else if (mode == 1 || mode == 3) {
+                if (mode == 1) {
+                    this.fftResult = this.fftResult.sort((a, b) => a.frequency - b.frequency)
+                    this.fftResultB = this.fftResultB.sort((a, b) => a.frequency - b.frequency)
+                } else if (mode == 3) { 
+                    this.fftResult = this.fftResult.sort((a, b) => b.magnitude - a.magnitude)
+                    this.fftResultB = this.fftResultB.sort((a, b) => b.magnitude - a.magnitude)
+                }
                 for (let i = 0; i < this.fftResult.length; i++) {
                     const partialA = this.fftResult[i]
                     const partialB = this.fftResultB[i]
@@ -300,7 +307,7 @@ class FrequencyFade extends Effect {
         let output = 0
 
         const inputB = this.inputB.getModulatedValue()
-        const mode = this.parameters.mode.getModulatedValue()
+        const mode = Math.floor(this.parameters.mode.getModulatedValue())
         const partials = Math.floor(this.parameters.partials.getModulatedValue())
         const balance = this.parameters.balance.getModulatedValue()
         const inverseBalance = 1 - balance
@@ -312,17 +319,36 @@ class FrequencyFade extends Effect {
             this.fftResult = getLoudestHarmonicsFromAudioData(this.window, this.sampleRate, partials)
             this.fftResultB = getLoudestHarmonicsFromAudioData(this.windowB, this.sampleRate, partials)
 
+            this.fftResult = [
+                {
+                    frequency: 880,
+                    magnitude: 1,
+                    phase: 0
+                },
+                {
+                    frequency: 2000,
+                    magnitude: 0.5,
+                    phase: 0
+                }
+            ]
+            this.fftResultB = [
+                {
+                    frequency: 440,
+                    magnitude: 0.2,
+                    phase: 0
+                },
+                {
+                    frequency: 700,
+                    magnitude: 0.4,
+                    phase: 0
+                }
+            ]
+
             this.window = []
             this.windowB = []
             this.debug = true
         }
         if (this.fftResult.length >= partials) {
-
-            if (mode == 1) {
-                this.fftResult = this.fftResult.sort((a, b) => a.frequency - b.frequency)
-                this.fftResultB = this.fftResultB.sort((a, b) => a.frequency - b.frequency)
-            }
-
             if (mode == 0 || mode == 2) {
                 for (let i = 0; i < this.transitions.length; i++) {
 
@@ -344,16 +370,9 @@ class FrequencyFade extends Effect {
                         mode
                     )
 
-                    if (this.debug_4 < 100) {
-                        //console.log("partialOutput", partialOutput)
-                    }
-
                     output += partialOutput
                 }
                 
-                if (this.debug_4 < 100 || (this.debug_4 < 1000 && output > 0.01)) {
-                    //console.log("final output", output)
-                }
             } else if (mode == 1 || mode == 3) {
                 for (let i = 0; i < partials; i++) {
                     const partialA = this.fftResult[i]

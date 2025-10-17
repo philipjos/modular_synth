@@ -88,10 +88,23 @@ class SelectionParameter extends Parameter {
     }
 
     getMaxValueFromOptions(options) {
-        return options.length - 0.01
+        
+        return this.closestNumberBelow(options.length)
     }
 
     setValueFromIndex(index) {
         this.dropdown.value = this.options[index].value
     }
+
+    closestNumberBelow(x) {
+        if (Number.isNaN(x) || x === -Infinity) return x;
+        if (x === 0) return -Number.MIN_VALUE;
+        const buf = new DataView(new ArrayBuffer(8));
+        buf.setFloat64(0, x);
+        let bits = buf.getBigUint64(0);
+        if (x > 0n) bits -= 1n;
+        else bits += 1n;
+        buf.setBigUint64(0, bits);
+        return buf.getFloat64(0);
+      }
 }

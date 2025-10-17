@@ -649,7 +649,7 @@ oscillators[3].parameters["frequency"].value = 3520
 
 
 effects[0].parameters["partials"].value = 2
-effects[0].parameters["mode"].setValueFromIndex(1)
+effects[0].parameters["mode"].setValueFromIndex(0)
 
 otherDevices[0].goesToMainOutput = false
 otherDevices[0].parameters["attack"].value = 0.5
