@@ -319,30 +319,30 @@ class FrequencyFade extends Effect {
             this.fftResult = getLoudestHarmonicsFromAudioData(this.window, this.sampleRate, partials)
             this.fftResultB = getLoudestHarmonicsFromAudioData(this.windowB, this.sampleRate, partials)
 
-            this.fftResult = [
-                {
-                    frequency: 880,
-                    magnitude: 1,
-                    phase: 0
-                },
-                {
-                    frequency: 2000,
-                    magnitude: 0.5,
-                    phase: 0
-                }
-            ]
-            this.fftResultB = [
-                {
-                    frequency: 440,
-                    magnitude: 0.2,
-                    phase: 0
-                },
-                {
-                    frequency: 700,
-                    magnitude: 0.4,
-                    phase: 0
-                }
-            ]
+            // this.fftResult = [
+            //     {
+            //         frequency: 880,
+            //         magnitude: 1,
+            //         phase: 0
+            //     },
+            //     {
+            //         frequency: 2000,
+            //         magnitude: 0.5,
+            //         phase: 0
+            //     }
+            // ]
+            // this.fftResultB = [
+            //     {
+            //         frequency: 440,
+            //         magnitude: 0.2,
+            //         phase: 0
+            //     },
+            //     {
+            //         frequency: 700,
+            //         magnitude: 0.4,
+            //         phase: 0
+            //     }
+            // ]
 
             this.window = []
             this.windowB = []
