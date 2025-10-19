@@ -2,7 +2,6 @@ class DeepDistortion extends Effect {
     static typeDisplayName = "Deep distortion"
     static typeId = "deepDistortion"
     static FFT_WINDOW_SIZE = Math.pow(2, 11)
-    static PARTIALS = 4
 
     constructor(objectIDManager) {
         super(objectIDManager)
@@ -14,6 +13,14 @@ class DeepDistortion extends Effect {
                 1,
                 10,
                 1,
+                0
+            ),
+            partials: new NumericalParameter(
+                objectIDManager,
+                "Partials",
+                1,
+                10,
+                4,
                 0
             ),
             preVSPostMagnitudeScaling: new NumericalParameter(
@@ -37,8 +44,10 @@ class DeepDistortion extends Effect {
     calculateOutputFromInput(input) {
         var output = 0
         this.memory.push(input)
+
         if (this.memory.length > DeepDistortion.FFT_WINDOW_SIZE) {
-            this.fftResult = getLoudestHarmonicsFromAudioData(this.memory, this.sampleRate, DeepDistortion.PARTIALS)
+            const partials = this.parameters.partials.getModulatedValue()
+            this.fftResult = getLoudestHarmonicsFromAudioData(this.memory, this.sampleRate, partials)
             // this.fftResult = [
             //     {frequency: 110, magnitude: 2 / (Math.PI * 1), phase: 0},
             //     {frequency: 220, magnitude: 2 / (Math.PI * 2), phase: 0},

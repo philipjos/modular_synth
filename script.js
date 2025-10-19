@@ -647,7 +647,7 @@ oscillators[0].parameters.shape.setValueFromIndex(3)
 connections[0].parameters.from.setValueFromIndex(0)
 connections[0].parameters.to.setValueFromIndex(1)
 connections[0].updateParameterSelector()
-connections[0].parameters.parameter.setValueFromIndex(2)
+connections[0].parameters.parameter.setValueFromIndex(3)
 connections[0].parameters.amount.value = 1
 
 setTab(2)
