@@ -132,4 +132,8 @@ class Device extends ViewWithID {
 
         return parameters
     }
+
+    getDisplayOffset() {
+        return 0
+    }
 }

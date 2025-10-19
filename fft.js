@@ -48,12 +48,13 @@ function phases(_fft) {
 }
 
 function toHarmonicObject(_fft, sampleRate) {
+    let originalFFTLength = (_fft.length + 1) * 2;
     let _magnitudes = magnitudes(_fft)
     let _phases = phases(_fft)
 
     let harmonics = [];
     for (let i = 0; i < _magnitudes.length; i++) {
-        let frequency = i * sampleRate / _magnitudes.length;
+        let frequency = i * sampleRate / originalFFTLength;
         let magnitude = _magnitudes[i];
         let phase = _phases[i];
 
@@ -89,4 +90,10 @@ function getLoudestHarmonicsFromAudioData(audioData, sampleRate, count) {
     const output = loudestHarmonicsOfFFT(relevant, sampleRate, count);
 
     return output
+}
+
+function harmonicsOfFFTFromAudioData(audioData, sampleRate) {
+    const _fft = fft(audioData)
+    const relevant = _fft.slice(1, _fft.length / 2)
+    return toHarmonicObject(relevant, sampleRate);
 }

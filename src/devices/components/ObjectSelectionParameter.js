@@ -28,10 +28,14 @@ class ObjectSelectionParameter extends SelectionParameter {
         return option
     }
 
+    getObjectOptionWithId(id) {
+        return this.objectsForOptions.find((e) => e.id === id)
+    }
+
     getSelectedObject() {
         const selectedValue = this.dropdown.value
         
-        const selectedObject = this.objectsForOptions.find((e) => e.id === parseInt(selectedValue))
+        const selectedObject = this.getObjectOptionWithId(parseInt(selectedValue))
         return selectedObject
     }
 

@@ -1,5 +1,6 @@
 let oscilloscopeWidth = 300
 let oscilloscopeHeight = 100
+let displayOffset = 0
 
 let oscillatorWidthsPerSecond = 50
 let pixelsPerSecond = oscillatorWidthsPerSecond * oscilloscopeWidth
@@ -36,7 +37,7 @@ var dropdownStates = {}
 
 var availablePinnedDevices = [Connection]
 var availableOscillatos = [OscillatorProper, Noise]
-var availableEffects = [Distortion, Delay, Volume, Syncifier, BitCrusher, PulseWidth, FrequencyFade]
+var availableEffects = [Distortion, Delay, Volume, Syncifier, BitCrusher, PulseWidth, FrequencyFade, DeepDistortion]
 var availableOtherDevices = [Envelope, EnvelopeFollower]
 
 const objectIDManager = new ObjectIDManager()
@@ -111,8 +112,19 @@ function calculateBuffer(length, scale) {
 	return outputBuffer_new
 }
 
+function updateDisplayOffset() {
+	displayOffset = 0
+	for (let device of getNonConnectionDevices()) {
+		if (device.outputConnections > 0) {
+			displayOffset = Math.max(displayOffset, device.getDisplayOffset())
+		}
+	}
+}
+
 function updateOscilloscope() {
-	let outputBuffer = calculateBuffer(oscilloscopeWidth, pixelsPerSecond)
+	updateDisplayOffset()
+	let outputBuffer = calculateBuffer(oscilloscopeWidth + displayOffset, pixelsPerSecond)
+	outputBuffer = outputBuffer.slice(displayOffset)
 
 	oscilloscope.updateFromBuffer(outputBuffer)
 }
@@ -285,7 +297,8 @@ function onRandomPresetClicked () {
 
 	for (let device of getNonConnectionDevices()) {
 		if (device instanceof OutputDevice) {
-			device.goesToMainOutput = Math.random() >= 0.5
+			let goesToMainOutput = Math.random() >= 0.5
+			device.setGoesToMainOutput(goesToMainOutput)
 			device.updateMainOutputLED()
 		}
 
@@ -341,7 +354,8 @@ const setSynthFromPresetObject = (presetObject) => {
 		let device = addDevice(deviceType)
 
 		if (device instanceof OutputDevice) {
-			device.goesToMainOutput = presetDevice.goesToMainOutput
+			device.setGoesToMainOutput(presetDevice.goesToMainOutput)
+			device.updateMainOutputLED()
 		}
 
 		for (let parameterKey in device.parameters) {
@@ -471,7 +485,9 @@ function onDeletePressed(device) {
 	if (device instanceof Oscillator) {
 		oscillators.splice(oscillators.indexOf(device), 1)
 	} else if (device instanceof Connection) {
-        connections.splice(connections.indexOf(device), 1)
+        let connection = connections.splice(connections.indexOf(device), 1)[0]
+		let sourceObject = connection.parameters["from"].getSelectedObject()
+		sourceObject.outputConnections -= 1
     } else if (device instanceof Effect) {
 		effects.splice(effects.indexOf(device), 1)
     } else if (device instanceof OtherDevice) {
@@ -619,70 +635,25 @@ setTab(0);
 updateOscilloscope();
 
 // Test
-addDevice(OscillatorProper)
-addDevice(OscillatorProper)
-addDevice(OscillatorProper)
-addDevice(FrequencyFade)
-addDevice(Envelope)
-addDevice(Connection)
-addDevice(Connection)
-addDevice(Connection)
-addDevice(Connection)
+addDevice(DeepDistortion)
 addDevice(Connection)
 
-oscillators[0].goesToMainOutput = false
-oscillators[1].goesToMainOutput = false
-oscillators[2].goesToMainOutput = false
-oscillators[3].goesToMainOutput = false
+oscillators[0].setGoesToMainOutput(false)
+oscillators[0].updateMainOutputLED()
+oscillators[0].parameters.frequency.value = 220
+oscillators[0].parameters.partials.value = 4
+oscillators[0].parameters.shape.setValueFromIndex(3)
 
-oscillators[0].parameters["amplitude"].value = 1
-oscillators[0].parameters["frequency"].value = 440
-
-oscillators[1].parameters["amplitude"].value = 1
-oscillators[1].parameters["frequency"].value = 700
-
-oscillators[2].parameters["amplitude"].value = 1
-oscillators[2].parameters["frequency"].value = 700
-
-oscillators[3].parameters["amplitude"].value = 1
-oscillators[3].parameters["frequency"].value = 3520
-
-
-effects[0].parameters["partials"].value = 2
-effects[0].parameters["mode"].setValueFromIndex(0)
-
-otherDevices[0].goesToMainOutput = false
-otherDevices[0].parameters["attack"].value = 0.5
-
-connections[0].parameters["from"].setValueFromIndex(0)
-connections[0].parameters["to"].setValueFromIndex(4)
+connections[0].parameters.from.setValueFromIndex(0)
+connections[0].parameters.to.setValueFromIndex(1)
 connections[0].updateParameterSelector()
-connections[0].parameters["parameter"].setValueFromIndex(3)
-connections[0].parameters["amount"].value = 1
-
-connections[1].parameters["from"].setValueFromIndex(1)
-connections[1].parameters["to"].setValueFromIndex(4)
-connections[1].updateParameterSelector()
-connections[1].parameters["parameter"].setValueFromIndex(3)
-connections[1].parameters["amount"].value = 1
-
-connections[2].parameters["from"].setValueFromIndex(2)
-connections[2].parameters["to"].setValueFromIndex(4)
-connections[2].updateParameterSelector()
-connections[2].parameters["parameter"].setValueFromIndex(4)
-connections[2].parameters["amount"].value = 1
-
-connections[3].parameters["from"].setValueFromIndex(3)
-connections[3].parameters["to"].setValueFromIndex(4)
-connections[3].updateParameterSelector()
-connections[3].parameters["parameter"].setValueFromIndex(4)
-connections[3].parameters["amount"].value = 1
-
-connections[4].parameters["from"].setValueFromIndex(5)
-connections[4].parameters["to"].setValueFromIndex(4)
-connections[4].updateParameterSelector()
-connections[4].parameters["parameter"].setValueFromIndex(1)
-connections[4].parameters["amount"].value = 1
+connections[0].parameters.parameter.setValueFromIndex(2)
+connections[0].parameters.amount.value = 1
 
 setTab(2)
 updateOscilloscope()
+
+// const offset = 2048
+// var oscilloscopeBuffer = calculateBuffer(oscilloscopeWidth + offset, pixelsPerSecond)
+// oscilloscopeBuffer = oscilloscopeBuffer.slice(offset)
+// oscilloscope.updateFromBuffer(oscilloscopeBuffer)

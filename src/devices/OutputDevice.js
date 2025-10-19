@@ -3,6 +3,7 @@ class OutputDevice extends Device {
         super(objectIDManager)
         this.lastOutput = 0
         this.goesToMainOutput = true
+        this.outputConnections = 1
 
         const mainOutputSection = document.createElement("div");
         mainOutputSection.classList.add("main-output-section");
@@ -13,7 +14,8 @@ class OutputDevice extends Device {
         mainOutputButton.classList.add("main-output-button");
         mainOutputButton.classList.add("text");
         mainOutputButton.addEventListener("click", (() => {
-            this.goesToMainOutput = !this.goesToMainOutput
+            let goesToMainOutput = !this.goesToMainOutput
+            this.setGoesToMainOutput(goesToMainOutput)
             this.onDeviceChanged()
             this.updateMainOutputLED()
         }).bind(this))
@@ -22,6 +24,19 @@ class OutputDevice extends Device {
         this.mainOutputLED = document.createElement("div");
         this.mainOutputLED.classList.add("main-output-led");
         mainOutputSection.appendChild(this.mainOutputLED)
+    }
+
+    setGoesToMainOutput(goesToMainOutput) {
+        const previousValue = this.goesToMainOutput
+        this.goesToMainOutput = goesToMainOutput
+
+        if (previousValue != goesToMainOutput) {
+            if (goesToMainOutput) {
+                this.outputConnections += 1
+            } else {
+                this.outputConnections -= 1
+            }
+        }
     }
 
     calculateOutput() {

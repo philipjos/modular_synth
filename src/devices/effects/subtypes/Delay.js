@@ -24,8 +24,6 @@ class Delay extends Effect {
                 0
             )
         })
-
-        this.goesToMainOutput = true
     }
     
     calculateOutputFromInput(input) {

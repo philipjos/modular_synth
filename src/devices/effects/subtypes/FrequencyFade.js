@@ -67,7 +67,6 @@ class FrequencyFade extends Effect {
     }
 
     resetForCalculations() {
-        // console.log("resetForCalculations")
         super.resetForCalculations()
         this.window = []
         this.windowB = []
@@ -104,13 +103,6 @@ class FrequencyFade extends Effect {
             * 2 * Math.PI
             + fadedPhase
         ) * fadedAmplitude
-        
-        // if (this.debug_4 < 600) {
-        //     console.log("partialB", partialB )
-        //     console.log("balance", balance)
-        //     console.log("angle", angle)
-        //     console.log("Output", output)
-        // }
 
         return output
     }
@@ -170,10 +162,6 @@ class FrequencyFade extends Effect {
                         source: partialA,
                         target: partialB
                     }
-                    if (this.debug) {
-                        // console.log("transition (loop 1)")
-                        // console.log(transition)
-                    }
                     this.transitions.push (transition)
 
                     if (this.countForFrequency[partialAFrequencyFloored] === undefined) {
@@ -225,28 +213,13 @@ class FrequencyFade extends Effect {
                             source: partialA,
                             target: partialB
                         }
-                        if (this.debug) {
-                            // console.log("transition")
-                            // console.log(transition)
-                        }
                         this.transitions.push (transition)
 
-                        if (this.debug) {
-                            // console.log("countForFrequency[partialAFrequencyFloored]", this.countForFrequency[partialAFrequencyFloored])
-                            // console.log("partialAFrequencyFloored", partialAFrequencyFloored)
-                        }
                         this.countForFrequency[partialAFrequencyFloored] += 1
                         this.countForFrequencyB[partialBFrequencyFloored] = 1
                     }
 
                     i += 1
-                }
-
-                if (this.debug_3) {
-                    // console.log("this.partialTimedSignals.length", this.partialTimedSignals.length)
-                    // console.log("this.transitions.length", this.transitions.length)
-                    // console.log("partials", partials)
-                    this.debug_3 = false
                 }
                 
                 for (i = 0; i < this.transitions.length; i++) {
@@ -262,14 +235,6 @@ class FrequencyFade extends Effect {
                     } else {
                         this.partialTimedSignals.push(new TimedSignal(stepSize))
                     }
-                }
-
-                if (this.debug) {
-                    // console.log(this.countForFrequency)
-                    // console.log(this.countForFrequencyB)
-                    // console.log("transitions")
-                    // console.log(this.transitions)
-                    this.debug = false
                 }
 
             } else if (mode == 1 || mode == 3) {
@@ -351,16 +316,6 @@ class FrequencyFade extends Effect {
         if (this.fftResult.length >= partials) {
             if (mode == 0 || mode == 2) {
                 for (let i = 0; i < this.transitions.length; i++) {
-
-                    // if (this.debug_4 < 600) {
-                    //     console.log("i", i)
-                    //     console.log("this.transitions[i].source", this.transitions[i].source)
-                    //     console.log("this.transitions[i].target", this.transitions[i].target)
-                    //     console.log("inverseBalance", inverseBalance)
-                    //     console.log("balance", balance)
-                    //     console.log("this.partialTimedSignals[i].x", this.partialTimedSignals[i].x)
-                    // }
-
                     const partialOutput = this.getFadedPartialOutput(
                         this.transitions[i].source,
                         this.transitions[i].target,
