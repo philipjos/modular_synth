@@ -98,10 +98,11 @@ function calculateBuffer(length, scale) {
 
 			if (device instanceof OutputDevice) {
 				const deviceOutput = device.calculateOutput()
-				device.lastOutput = deviceOutput
+				const clippedDeviceOutput = Math.max(-1, Math.min(1, deviceOutput))
+				device.lastOutput = clippedDeviceOutput
 
 				if (device.goesToMainOutput) {
-					output_new += deviceOutput
+					output_new += clippedDeviceOutput
 				}
 			}
 
@@ -636,6 +637,8 @@ updateOscilloscope();
 
 // Test
 addDevice(DeepDistortion)
+addDevice(Envelope)
+addDevice(Connection)
 addDevice(Connection)
 
 oscillators[0].setGoesToMainOutput(false)
@@ -644,11 +647,24 @@ oscillators[0].parameters.frequency.value = 220
 oscillators[0].parameters.partials.value = 4
 oscillators[0].parameters.shape.setValueFromIndex(3)
 
+otherDevices[0].parameters.attack.value = 1
+otherDevices[0].setGoesToMainOutput(false)
+otherDevices[0].updateMainOutputLED()
+
 connections[0].parameters.from.setValueFromIndex(0)
 connections[0].parameters.to.setValueFromIndex(1)
 connections[0].updateParameterSelector()
-connections[0].parameters.parameter.setValueFromIndex(3)
+connections[0].parameters.parameter.setValueFromIndex(4)
 connections[0].parameters.amount.value = 1
+
+connections[1].parameters.from.setValueFromIndex(2)
+connections[1].parameters.to.setValueFromIndex(0)
+connections[1].updateParameterSelector()
+connections[1].parameters.parameter.setValueFromIndex(0)
+connections[1].parameters.amount.value = 0.1
+
+effects[0].parameters.transition.value = 0.5
+
 
 setTab(2)
 updateOscilloscope()
