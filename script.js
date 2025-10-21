@@ -36,7 +36,7 @@ const otherDevicesView = document.getElementById("other-devices")
 var dropdownStates = {}
 
 var availablePinnedDevices = [Connection]
-var availableOscillatos = [OscillatorProper, Noise]
+var availableOscillatos = [OscillatorProper, Noise, Sampler]
 var availableEffects = [Distortion, Delay, Volume, Syncifier, BitCrusher, PulseWidth, FrequencyFade, DeepDistortion]
 var availableOtherDevices = [Envelope, EnvelopeFollower]
 
@@ -636,40 +636,6 @@ setTab(0);
 updateOscilloscope();
 
 // Test
-addDevice(DeepDistortion)
-addDevice(Envelope)
-addDevice(Connection)
-addDevice(Connection)
-
-oscillators[0].setGoesToMainOutput(false)
-oscillators[0].updateMainOutputLED()
-oscillators[0].parameters.frequency.value = 220
-oscillators[0].parameters.partials.value = 4
-oscillators[0].parameters.shape.setValueFromIndex(3)
-
-otherDevices[0].parameters.attack.value = 1
-otherDevices[0].setGoesToMainOutput(false)
-otherDevices[0].updateMainOutputLED()
-
-connections[0].parameters.from.setValueFromIndex(0)
-connections[0].parameters.to.setValueFromIndex(1)
-connections[0].updateParameterSelector()
-connections[0].parameters.parameter.setValueFromIndex(4)
-connections[0].parameters.amount.value = 1
-
-connections[1].parameters.from.setValueFromIndex(2)
-connections[1].parameters.to.setValueFromIndex(0)
-connections[1].updateParameterSelector()
-connections[1].parameters.parameter.setValueFromIndex(0)
-connections[1].parameters.amount.value = 0.1
-
-effects[0].parameters.transition.value = 0.5
-
-
-setTab(2)
+onDeletePressed(oscillators[0])
+addDevice(Sampler)
 updateOscilloscope()
-
-// const offset = 2048
-// var oscilloscopeBuffer = calculateBuffer(oscilloscopeWidth + offset, pixelsPerSecond)
-// oscilloscopeBuffer = oscilloscopeBuffer.slice(offset)
-// oscilloscope.updateFromBuffer(oscilloscopeBuffer)
