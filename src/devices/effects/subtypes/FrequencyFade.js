@@ -75,6 +75,7 @@ class FrequencyFade extends Effect {
         this.countForFrequency = {}
         this.countForFrequencyB = {}
         this.transitions = []
+        this.timedSignalsHasBeenSet = false
         this.debug = true
         this.debug2 = true
         this.debug_3 = true
@@ -112,8 +113,6 @@ class FrequencyFade extends Effect {
             this.partialTimedSignals.push(new TimedSignal())
         }
 
-        this.transitions = []
-
         const mode = this.parameters.mode.getModulatedValue()
         const balance = this.parameters.balance.getModulatedValue()
         const inverseBalance = 1 - balance
@@ -121,109 +120,7 @@ class FrequencyFade extends Effect {
 
         if (this.fftResult.length >= partials) {
             if (mode == 0 || mode == 2) {
-                this.countForFrequency = {}
-                this.countForFrequencyB = {}
-
-                let i = 0
-                while (i < partials) {
-                    let partialA = this.fftResult[i]
-                    let partialAFrequencyFloored = Math.floor(partialA.frequency)
-                    
-                    let smallestDifference = undefined
-                    let smallestDifferenceIndex = undefined
-
-                    let matchHasBeenFound = false
-                    let j = 0
-                    while (!matchHasBeenFound && j < this.fftResultB.length) {
-                        let partialB = this.fftResultB[j]
-
-                        var difference
-                        if (mode == 0) {
-                            difference = Math.abs(partialB.frequency - partialA.frequency)
-                        } else if (mode == 2) {
-                            difference = Math.abs(partialB.magnitude - partialA.magnitude)
-                        }
-                        
-                        if (smallestDifference === undefined || difference < smallestDifference) {
-                            if (difference == 0) {
-                                matchHasBeenFound = true
-                            }
-                            smallestDifference = difference
-                            smallestDifferenceIndex = j
-                        }
-
-                        j += 1
-                    }
-
-                    let partialB = this.fftResultB[smallestDifferenceIndex]
-                    let partialBFrequencyFloored = Math.floor(partialB.frequency)
-
-                    const transition = {
-                        source: partialA,
-                        target: partialB
-                    }
-                    this.transitions.push (transition)
-
-                    if (this.countForFrequency[partialAFrequencyFloored] === undefined) {
-                        this.countForFrequency[partialAFrequencyFloored] = 1
-                    } else {
-                        this.countForFrequency[partialAFrequencyFloored] += 1
-                    }
-
-                    if (this.countForFrequencyB[partialBFrequencyFloored] === undefined) {
-                        this.countForFrequencyB[partialBFrequencyFloored] = 1
-                    } else {
-                        this.countForFrequencyB[partialBFrequencyFloored] += 1
-                    }
-
-                    i += 1
-                }
-
-                i = 0
-                while (i < partials && Object.keys(this.countForFrequencyB).length < partials) {
-                    let partialB = this.fftResultB[i]
-                    let partialBFrequencyFloored = Math.floor(partialB.frequency)
-
-                    if (!this.countForFrequencyB[partialBFrequencyFloored]) {
-                        
-                        let smallestDifference = undefined
-                        let smallestDifferenceIndex = undefined
-                        
-                        let j = 0
-                        while (j < partials) {
-
-                            var difference
-                            if (mode == 0) {
-                                difference = Math.abs(this.fftResult[j].frequency - partialB.frequency)
-                            } else if (mode == 2) {
-                                difference = Math.abs(this.fftResult[j].magnitude - partialB.magnitude)
-                            }
-
-                            if (smallestDifference === undefined || difference < smallestDifference) {
-                                smallestDifference = difference
-                                smallestDifferenceIndex = j
-                            }
-
-                            j += 1
-                        }
-                        let partialA = this.fftResult[smallestDifferenceIndex]
-                        let partialAFrequencyFloored = Math.floor(partialA.frequency)
-
-                        const transition = {
-                            source: partialA,
-                            target: partialB
-                        }
-                        this.transitions.push (transition)
-
-                        this.countForFrequency[partialAFrequencyFloored] += 1
-                        this.countForFrequencyB[partialBFrequencyFloored] = 1
-                    }
-
-                    i += 1
-                }
-                
-                for (i = 0; i < this.transitions.length; i++) {
-                    
+                for (let i = 0; i < this.transitions.length; i++) {
                     let frequency = this.transitions[i].source.frequency
                                     * inverseBalance
                                     + this.transitions[i].target.frequency
@@ -260,6 +157,8 @@ class FrequencyFade extends Effect {
                 }
             }
         }
+        
+        this.timedSignalsHasBeenSet = true
 
         for (let i = 0; i < this.partialTimedSignals.length; i++) {
             this.partialTimedSignals[i].advanceTime()
@@ -269,6 +168,7 @@ class FrequencyFade extends Effect {
     }
 
     calculateOutputFromInput(input) {
+
         let output = 0
 
         const inputB = this.inputB.getModulatedValue()
@@ -286,28 +186,132 @@ class FrequencyFade extends Effect {
 
             // this.fftResult = [
             //     {
-            //         frequency: 880,
+            //         frequency: 440,
             //         magnitude: 1,
             //         phase: 0
             //     },
             //     {
-            //         frequency: 2000,
-            //         magnitude: 0.5,
+            //         frequency: 440,
+            //         magnitude: 1,
             //         phase: 0
             //     }
             // ]
             // this.fftResultB = [
             //     {
-            //         frequency: 440,
-            //         magnitude: 0.2,
+            //         frequency: 880,
+            //         magnitude: 1,
             //         phase: 0
             //     },
             //     {
-            //         frequency: 700,
-            //         magnitude: 0.4,
+            //         frequency: 880,
+            //         magnitude: 1,
             //         phase: 0
             //     }
             // ]
+            this.transitions = []
+
+            this.countForFrequency = {}
+            this.countForFrequencyB = {}
+
+            let i = 0
+            while (i < partials) {
+                let partialA = this.fftResult[i]
+                let partialAFrequencyFloored = Math.floor(partialA.frequency)
+                
+                let smallestDifference = undefined
+                let smallestDifferenceIndex = undefined
+
+                let matchHasBeenFound = false
+                let j = 0
+                while (!matchHasBeenFound && j < this.fftResultB.length) {
+                    let partialB = this.fftResultB[j]
+
+                    var difference
+                    if (mode == 0) {
+                        difference = Math.abs(partialB.frequency - partialA.frequency)
+                    } else if (mode == 2) {
+                        difference = Math.abs(partialB.magnitude - partialA.magnitude)
+                    }
+                    
+                    if (smallestDifference === undefined || difference < smallestDifference) {
+                        if (difference == 0) {
+                            matchHasBeenFound = true
+                        }
+                        smallestDifference = difference
+                        smallestDifferenceIndex = j
+                    }
+
+                    j += 1
+                }
+
+                let partialB = this.fftResultB[smallestDifferenceIndex]
+                let partialBFrequencyFloored = Math.floor(partialB.frequency)
+
+                const transition = {
+                    source: partialA,
+                    target: partialB
+                }
+                this.transitions.push (transition)
+
+                if (this.countForFrequency[partialAFrequencyFloored] === undefined) {
+                    this.countForFrequency[partialAFrequencyFloored] = 1
+                } else {
+                    this.countForFrequency[partialAFrequencyFloored] += 1
+                }
+
+                if (this.countForFrequencyB[partialBFrequencyFloored] === undefined) {
+                    this.countForFrequencyB[partialBFrequencyFloored] = 1
+                } else {
+                    this.countForFrequencyB[partialBFrequencyFloored] += 1
+                }
+
+                i += 1
+            }
+
+            i = 0
+            while (i < partials && Object.keys(this.countForFrequencyB).length < partials) {
+                let partialB = this.fftResultB[i]
+                let partialBFrequencyFloored = Math.floor(partialB.frequency)
+
+                if (!this.countForFrequencyB[partialBFrequencyFloored]) {
+                    
+                    let smallestDifference = undefined
+                    let smallestDifferenceIndex = undefined
+                    
+                    let j = 0
+                    while (j < partials) {
+
+                        var difference
+                        if (mode == 0) {
+                            difference = Math.abs(this.fftResult[j].frequency - partialB.frequency)
+                        } else if (mode == 2) {
+                            difference = Math.abs(this.fftResult[j].magnitude - partialB.magnitude)
+                        }
+
+                        if (smallestDifference === undefined || difference < smallestDifference) {
+                            smallestDifference = difference
+                            smallestDifferenceIndex = j
+                        }
+
+                        j += 1
+                    }
+                    let partialA = this.fftResult[smallestDifferenceIndex]
+                    let partialAFrequencyFloored = Math.floor(partialA.frequency)
+
+                    const transition = {
+                        source: partialA,
+                        target: partialB
+                    }
+                    this.transitions.push (transition)
+
+                    this.countForFrequency[partialAFrequencyFloored] += 1
+                    this.countForFrequencyB[partialBFrequencyFloored] = 1
+                }
+
+                i += 1
+            }
+
+            this.timedSignalsHasBeenSet = false
 
             this.window = []
             this.windowB = []
@@ -321,7 +325,9 @@ class FrequencyFade extends Effect {
                         this.transitions[i].target,
                         inverseBalance,
                         balance,
-                        this.partialTimedSignals[i].x,
+                        this.timedSignalsHasBeenSet 
+                            ? this.partialTimedSignals[i].x
+                            : 0,
                         mode
                     )
 

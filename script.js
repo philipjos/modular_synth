@@ -636,6 +636,33 @@ setTab(0);
 updateOscilloscope();
 
 // Test
-onDeletePressed(oscillators[0])
-addDevice(Sampler)
+addDevice(OscillatorProper)
+addDevice(FrequencyFade)
+addDevice(Connection)
+addDevice(Connection)
+
+oscillators[0].parameters["frequency"].value = 440
+oscillators[0].parameters["shape"].setValueFromIndex(1)
+oscillators[0].setGoesToMainOutput(false)
+
+oscillators[1].parameters["frequency"].value = 880
+oscillators[1].parameters["shape"].setValueFromIndex(3)
+oscillators[1].setGoesToMainOutput(false)
+
+connections[0].parameters["from"].setValueFromIndex(0)
+connections[0].parameters["to"].setValueFromIndex(2)
+connections[0].updateParameterSelector()
+connections[0].parameters["parameter"].setValueFromIndex(3)
+connections[0].parameters["amount"].value = 1
+
+connections[1].parameters["from"].setValueFromIndex(1)
+connections[1].parameters["to"].setValueFromIndex(2)
+connections[1].updateParameterSelector()
+connections[1].parameters["parameter"].setValueFromIndex(4)
+connections[1].parameters["amount"].value = 1
+
+effects[0].parameters["partials"].value = 16
+
+setTab(2)
+
 updateOscilloscope()
