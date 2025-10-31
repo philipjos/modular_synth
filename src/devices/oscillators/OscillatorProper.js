@@ -56,8 +56,8 @@ class OscillatorProper extends Oscillator {
                 objectIDManager,
                 "Partials",
                 1,
-                35,
-                35,
+                37,
+                37,
                 0
             ),
             sync: new NumericalParameter(
@@ -83,37 +83,59 @@ class OscillatorProper extends Oscillator {
         this.timedSignals["syncTime"] = new TimedSignal()
     }
 
+    getAngle(x, phase) {
+        return x * 2 * Math.PI + phase * Math.PI / 180
+    }
+
     calculateOutput() {
         var output = 0
-        
-        const phasedX = this.timedSignals["syncTime"].x * 2 * Math.PI
-            + this.parameters["syncPhase"].getModulatedValue() * Math.PI / 180
 
+        const syncTime = this.timedSignals["syncTime"].x
+        const syncPhase = this.parameters["syncPhase"].getModulatedValue()
         if (this.parameters["shape"].getModulatedValue() == 0) {
-            output = Math.sin(phasedX)
+            const angle = this.getAngle(syncTime, syncPhase)
+            output = Math.sin(angle)
         } else {
-            for (let i = 1; i <= this.parameters["partials"].getModulatedValue(); i++) {
-                
-                var partialFrequency = 1
-                var partialAmplitude = 1
-
+            let partials = this.parameters["partials"].getModulatedValue()
+            if (partials > 36) {
+                const x = syncTime + syncPhase / 360
                 switch (this.parameters["shape"].getModulatedValue()) {
                     case 1:
-                        partialFrequency = 2 * i - 1
-                        partialAmplitude = 4 / (Math.PI * partialFrequency)
+                        output = ((x - Math.floor(x)) < 0.5)? 1 : -1
                         break
                     case 2:
-                        partialFrequency = 2 * i - 1
-                        partialAmplitude = -8 * Math.pow(-1, i) / (Math.pow(Math.PI, 2) * Math.pow(partialFrequency, 2))
+                        output = 4 * Math.abs(x - Math.floor(x + 0.75) + 0.25) - 1
                         break
                     case 3:
-                        partialFrequency = i
-                        partialAmplitude = 2 / (Math.PI * partialFrequency)
+                        output = (x - Math.floor(x)) * (-2) + 1
+                        break
                 }
-                
-                const partialX = phasedX * partialFrequency
-                const partialOutput = Math.sin(partialX) * partialAmplitude
-                output += partialOutput
+            } else {
+                const angle = this.getAngle(syncTime, syncPhase)
+                let integerPartials = Math.floor(partials)
+                for (let i = 1; i <= integerPartials; i++) {
+                    
+                    var partialFrequency = 1
+                    var partialAmplitude = 1
+    
+                    switch (this.parameters["shape"].getModulatedValue()) {
+                        case 1:
+                            partialFrequency = 2 * i - 1
+                            partialAmplitude = 4 / (Math.PI * partialFrequency)
+                            break
+                        case 2:
+                            partialFrequency = 2 * i - 1
+                            partialAmplitude = -8 * Math.pow(-1, i) / (Math.pow(Math.PI, 2) * Math.pow(partialFrequency, 2))
+                            break
+                        case 3:
+                            partialFrequency = i
+                            partialAmplitude = 2 / (Math.PI * partialFrequency)
+                    }
+                    
+                    const partialX = angle * partialFrequency
+                    const partialOutput = Math.sin(partialX) * partialAmplitude
+                    output += partialOutput
+                }
             }
         }
 
