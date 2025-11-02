@@ -31,6 +31,11 @@ class SelectionParameter extends Parameter {
             this.onChange(previousValue);
             this.externalOnChange();
         });
+        this.dropdown.addEventListener("keydown", (event) => {
+            if (this.dropdown.matches(":focus-visible")) {
+                event.preventDefault()
+            }
+        });
         this.view.appendChild(this.dropdown)
     }
 
