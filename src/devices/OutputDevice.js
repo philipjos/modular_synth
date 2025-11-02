@@ -2,28 +2,31 @@ class OutputDevice extends Device {
     constructor(objectIDManager) {
         super(objectIDManager)
         this.lastOutput = 0
-        this.goesToMainOutput = true
-        this.outputConnections = 1
 
-        const mainOutputSection = document.createElement("div");
-        mainOutputSection.classList.add("main-output-section");
-        this.view.appendChild(mainOutputSection)
+        if (this.showsMainOutputButton()) {
+            this.goesToMainOutput = true
+            this.outputConnections = 1
 
-        const mainOutputButton = document.createElement("div");
-        mainOutputButton.innerHTML = "Main out";
-        mainOutputButton.classList.add("main-output-button");
-        mainOutputButton.classList.add("text");
-        mainOutputButton.addEventListener("click", (() => {
-            let goesToMainOutput = !this.goesToMainOutput
-            this.setGoesToMainOutput(goesToMainOutput)
-            this.onDeviceChanged()
-            this.updateMainOutputLED()
-        }).bind(this))
-        mainOutputSection.appendChild(mainOutputButton)
+            const mainOutputSection = document.createElement("div");
+            mainOutputSection.classList.add("main-output-section");
+            this.view.appendChild(mainOutputSection)
 
-        this.mainOutputLED = document.createElement("div");
-        this.mainOutputLED.classList.add("main-output-led");
-        mainOutputSection.appendChild(this.mainOutputLED)
+            const mainOutputButton = document.createElement("div");
+            mainOutputButton.innerHTML = "Main out";
+            mainOutputButton.classList.add("main-output-button");
+            mainOutputButton.classList.add("text");
+            mainOutputButton.addEventListener("click", (() => {
+                let goesToMainOutput = !this.goesToMainOutput
+                this.setGoesToMainOutput(goesToMainOutput)
+                this.onDeviceChanged()
+                this.updateMainOutputLED()
+            }).bind(this))
+            mainOutputSection.appendChild(mainOutputButton)
+
+            this.mainOutputLED = document.createElement("div");
+            this.mainOutputLED.classList.add("main-output-led");
+            mainOutputSection.appendChild(this.mainOutputLED)
+        }
     }
 
     setGoesToMainOutput(goesToMainOutput) {
@@ -53,5 +56,9 @@ class OutputDevice extends Device {
         object.goesToMainOutput = this.goesToMainOutput
 
         return object
+    }
+
+    showsMainOutputButton() {
+        return true
     }
 }

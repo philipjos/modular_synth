@@ -38,7 +38,7 @@ var dropdownStates = {}
 var availablePinnedDevices = [Connection]
 var availableOscillatos = [OscillatorProper, Noise, Sampler]
 var availableEffects = [Distortion, Delay, Volume, Syncifier, BitCrusher, PulseWidth, FrequencyFade, DeepDistortion]
-var availableOtherDevices = [Envelope, EnvelopeFollower]
+var availableOtherDevices = [Envelope, EnvelopeFollower, DCSignal]
 
 const objectIDManager = new ObjectIDManager()
 
@@ -575,6 +575,13 @@ function writeWAV(buffer, sampleRate) {
 	floatTo16BitPCM(view, 44, buffer)
 
 	return arrayBuffer
+}
+
+function onClearPresetClicked() {
+	if (confirm("Are you sure you want to clear the preset? Unsaved changes will be lost.")) {
+		clearPreset()
+		updateOscilloscope()
+	}
 }
 
 function onBounceAudioClicked() {
