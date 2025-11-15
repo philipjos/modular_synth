@@ -74,11 +74,14 @@ class Device extends ViewWithID {
         this.onDeviceChanged = value
         this.updateParametersWithOnDeviceChanged()
     }
-    
 
     resetForCalculations() {
         this.resetModulationDeltas()
         this.resetTimedSignals()
+    }
+
+    prepareForCalculations() {
+        this.resetForCalculations()
     }
 
     resetTimedSignals() {

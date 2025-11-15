@@ -65,7 +65,7 @@ function updateDurationSliderFromModel() {
 }
 
 function calculateBuffer(length, scale) {
-	resetDevicesForBufferCalculation(scale)
+	prepareDevicesForBufferCalculation(scale)
 
 	let outputBuffer_new = []
 
@@ -200,13 +200,11 @@ function play() {
 	source.start(audioCtx.currentTime);
 }
 
-function resetDevicesForBufferCalculation(scale) {
-
+function prepareDevicesForBufferCalculation(scale) {
 	let nonConnectionDevices = getNonConnectionDevices()
-
 	for (let i = 0; i < nonConnectionDevices.length; i++) {
 		nonConnectionDevices[i].sampleRate = scale
-		nonConnectionDevices[i].resetForCalculations()
+		nonConnectionDevices[i].prepareForCalculations()
 	}
 }
 
@@ -647,6 +645,8 @@ addDevice(OscillatorProper)
 addDevice(FrequencyFade)
 addDevice(Connection)
 addDevice(Connection)
+addDevice(Envelope)
+addDevice(Connection)
 
 oscillators[0].parameters["frequency"].value = 440
 oscillators[0].parameters["shape"].setValueFromIndex(1)
@@ -659,14 +659,22 @@ oscillators[1].setGoesToMainOutput(false)
 connections[0].parameters["from"].setValueFromIndex(0)
 connections[0].parameters["to"].setValueFromIndex(2)
 connections[0].updateParameterSelector()
-connections[0].parameters["parameter"].setValueFromIndex(3)
+connections[0].parameters["parameter"].setValueFromIndex(4)
 connections[0].parameters["amount"].value = 1
 
 connections[1].parameters["from"].setValueFromIndex(1)
 connections[1].parameters["to"].setValueFromIndex(2)
 connections[1].updateParameterSelector()
-connections[1].parameters["parameter"].setValueFromIndex(4)
+connections[1].parameters["parameter"].setValueFromIndex(5)
 connections[1].parameters["amount"].value = 1
+
+connections[2].parameters["from"].setValueFromIndex(3)
+connections[2].parameters["to"].setValueFromIndex(2)
+connections[2].updateParameterSelector()
+connections[2].parameters["parameter"].setValueFromIndex(1)
+connections[2].parameters["amount"].value = 1
+
+otherDevices[0].parameters["attack"].value = 1
 
 effects[0].parameters["partials"].value = 16
 
