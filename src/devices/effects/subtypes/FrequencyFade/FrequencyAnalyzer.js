@@ -33,6 +33,8 @@ class FrequencyAnalyzer {
                     this.lastFFTResult = this.destinationFFTResult
                     this.destinationFFTResult = potentialFFTResult
                     this.timeSinceTransitionStart = 0
+
+                    this.transitions = this.momentaryFrecuencyFader.calculateTransitions(this.lastFFTResult, this.destinationFFTResult)
                 }
             } else {
                 this.destinationFFTResult = potentialFFTResult
@@ -44,23 +46,19 @@ class FrequencyAnalyzer {
         if (this.hasEnteredFirstFFT) {
             const transitionInSamples = transition * this.sampleRate
             
-            if (this.hasFinishedFirstFFT) {
-                if (this.timeSinceTransitionStart >= transitionInSamples) {
-                    this.lastFFTResult = this.destinationFFTResult
-                    if (this.nextPotentialFFTResult.length > 0) {
-                        this.destinationFFTResult = this.nextPotentialFFTResult
+            if (this.hasFinishedFirstFFT && this.timeSinceTransitionStart >= transitionInSamples) {
+                this.lastFFTResult = this.destinationFFTResult
+                if (this.nextPotentialFFTResult.length > 0) {
+                    this.destinationFFTResult = this.nextPotentialFFTResult
 
-                        this.transitions = this.momentaryFrecuencyFader.calculateTransitions(this.lastFFTResult, this.destinationFFTResult)
-                    }
-                    this.lastTransitionPeakProgress = (transitionInSamples > 0) ? Math.min(1, this.timeSinceTransitionStart / transitionInSamples) : 1
+                    this.transitions = this.momentaryFrecuencyFader.calculateTransitions(this.lastFFTResult, this.destinationFFTResult)
                     this.timeSinceTransitionStart = 0
                 }
+                
+                this.lastTransitionPeakProgress = (transitionInSamples > 0) ? Math.min(1, this.timeSinceTransitionStart / transitionInSamples) : 1
             }
-
-            this.time += 1
-            this.timeSinceTransitionStart += 1
         }
-
+        
         if (this.transitions.length > 0) {
             const transitionInSamples = transition * this.sampleRate
             var outputPartials = []
@@ -73,11 +71,13 @@ class FrequencyAnalyzer {
                 outputPartial.phase = transition.source.phase * inverseProgress + transition.target.phase * progress
                 outputPartials.push(outputPartial)
             }
-
+            
             return outputPartials
         } else if (this.hasEnteredFirstFFT) {
-            return this.lastFFTResult
+            return this.destinationFFTResult
         }
+
+        this.timeSinceTransitionStart += 1
 
         return []
     }
