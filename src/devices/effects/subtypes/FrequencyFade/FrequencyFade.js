@@ -22,9 +22,9 @@ class FrequencyFade extends Effect {
                 0.5,
                 0
             ),
-            mode: new SelectionParameter(
+            input_a_mode: new SelectionParameter(
                 objectIDManager,
-                "Mode",
+                "Input A mode",
                 [{
                     value: "nearestFrequency",
                     label: "Nearest frequency"
@@ -40,7 +40,58 @@ class FrequencyFade extends Effect {
                 {
                     value: "amplitudeRank",
                     label: "Amplitude rank"
-                }]
+                },
+                {
+                    value: "amplitudeFade",
+                    label: "Amplitude fade"
+                }
+            ]
+            ),
+            input_b_mode: new SelectionParameter(
+                objectIDManager,
+                "Input B mode",
+                [{
+                    value: "nearestFrequency",
+                    label: "Nearest frequency"
+                }, 
+                {
+                    value: "frequencyRank",
+                    label: "Frequency rank"
+                }, 
+                {
+                    value: "nearestAmplitude",
+                    label: "Nearest amplitude"
+                }, 
+                {
+                    value: "amplitudeRank",
+                    label: "Amplitude rank"
+                },
+                {
+                    value: "amplitudeFade",
+                    label: "Amplitude fade"
+                }
+            ]
+            ),
+            fade_mode: new SelectionParameter(
+                objectIDManager,
+                "Fade mode",
+                [{
+                    value: "nearestFrequency",
+                    label: "Nearest frequency"
+                }, 
+                {
+                    value: "frequencyRank",
+                    label: "Frequency rank"
+                }, 
+                {
+                    value: "nearestAmplitude",
+                    label: "Nearest amplitude"
+                }, 
+                {
+                    value: "amplitudeRank",
+                    label: "Amplitude rank"
+                }
+            ]
             ),
             transition: new NumericalParameter(
                 objectIDManager,
@@ -80,11 +131,13 @@ class FrequencyFade extends Effect {
     prepareForCalculations() {
         super.prepareForCalculations()
         
-        this.mode = Math.floor(this.parameters.mode.getModulatedValue())
+        this.input_a_mode = Math.floor(this.parameters.input_a_mode.getModulatedValue())
+        this.input_b_mode = Math.floor(this.parameters.input_b_mode.getModulatedValue())
+        this.fade_mode = Math.floor(this.parameters.fade_mode.getModulatedValue())
         this.unmodulatedPartialsCount = Math.floor(this.parameters.partials.getValue())
-        this.frequencyAnalyzerA = new FrequencyAnalyzer(this.sampleRate, this.unmodulatedPartialsCount, this.mode)
-        this.frequencyAnalyzerB = new FrequencyAnalyzer(this.sampleRate, this.unmodulatedPartialsCount, this.mode)
-        this.momentaryFrecuencyFader = new MomentaryFrecuencyFader(this.mode)
+        this.frequencyAnalyzerA = new FrequencyAnalyzer(this.sampleRate, this.unmodulatedPartialsCount, this.input_a_mode)
+        this.frequencyAnalyzerB = new FrequencyAnalyzer(this.sampleRate, this.unmodulatedPartialsCount, this.input_b_mode)
+        this.momentaryFrecuencyFader = new MomentaryFrecuencyFader(this.fade_mode)
     }
 
     getFadedPartialOutput(partialA, partialB, inverseBalance, balance, angle) {

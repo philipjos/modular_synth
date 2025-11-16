@@ -22,12 +22,35 @@ class MomentaryFrecuencyFader {
         return normalizedTransitions
     }
 
+    silentPartialFrom(partial) {
+        return {...partial,
+            magnitude: 0
+        }
+    }
+
     calculateTransitions(sourceFFT, destinationFFT) {
+        var transitions = []
+
+        if (this.transitionType == 4) {
+            transitions = sourceFFT.map((partial) => {
+                return {
+                    source: partial,
+                    target: silentPartialFrom(partial)
+                }
+            }).concat(destinationFFT.map((partial) => {
+                return {
+                    source: silentPartialFrom(partial),
+                    target: partial
+                }
+            }))
+
+            return transitions
+        }
+
         if (sourceFFT.length == 0 || destinationFFT.length == 0) {
             return []
         }
 
-        var transitions = []
 
         this.countForFrequency = {}
         this.countForFrequencyB = {}

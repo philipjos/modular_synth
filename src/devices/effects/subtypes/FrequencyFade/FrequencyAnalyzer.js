@@ -54,8 +54,6 @@ class FrequencyAnalyzer {
                     this.transitions = this.momentaryFrecuencyFader.calculateTransitions(this.lastFFTResult, this.destinationFFTResult)
                     this.timeSinceTransitionStart = 0
                 }
-                
-                this.lastTransitionPeakProgress = (transitionInSamples > 0) ? Math.min(1, this.timeSinceTransitionStart / transitionInSamples) : 1
             }
         }
         
