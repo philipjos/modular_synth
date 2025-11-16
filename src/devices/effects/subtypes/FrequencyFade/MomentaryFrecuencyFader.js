@@ -35,11 +35,11 @@ class MomentaryFrecuencyFader {
             transitions = sourceFFT.map((partial) => {
                 return {
                     source: partial,
-                    target: silentPartialFrom(partial)
+                    target: this.silentPartialFrom(partial)
                 }
             }).concat(destinationFFT.map((partial) => {
                 return {
-                    source: silentPartialFrom(partial),
+                    source: this.silentPartialFrom(partial),
                     target: partial
                 }
             }))
@@ -50,7 +50,6 @@ class MomentaryFrecuencyFader {
         if (sourceFFT.length == 0 || destinationFFT.length == 0) {
             return []
         }
-
 
         this.countForFrequency = {}
         this.countForFrequencyB = {}
